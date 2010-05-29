@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://urlstripper/skin/overlay.css" type="text/css"?>
+<!DOCTYPE overlay SYSTEM "chrome://urlstripper/locale/urlstripper.dtd">
+<overlay id="urlstripper-overlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="overlay.js"/>
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="urlstripper-strings" src="chrome://urlstripper/locale/urlstripper.properties"/>
+  </stringbundleset>
+  
+  <popup id="contentAreaContextMenu">
+    <menuitem id="context-urlstripper" label="&urlstripperContext.label;"
+              accesskey="&urlstripperContext.accesskey;"
+              insertafter="context-stop"
+              oncommand="urlstripper.onMenuItemCommand(event)"/>
+  </popup>
+</overlay>
