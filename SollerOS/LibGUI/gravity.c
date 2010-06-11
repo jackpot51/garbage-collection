@@ -1,6 +1,5 @@
 //an attempt to use a C library with GUI calls in a C program
 #include "libgui.h"
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
