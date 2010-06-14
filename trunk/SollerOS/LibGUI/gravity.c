@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#define BG 0b0000000000000000 //background color in 5:6:5 RGB
+#define BG 0000000000000000 //background color in 5:6:5 RGB
 typedef struct {
 	double x;	//upper left position
 	double y;
@@ -260,7 +260,7 @@ while(running){
 			}
 			else pause = 1;
 		}
-		if(keys[0x1A]==1 & ips < 128) ips+=1; //left square bracket
+		if(keys[0x1A]==1 & ips < 127) ips+=1; //left square bracket
 		if(keys[0x1B]==1 & ips > 0) ips-=1; //rigt square bracket
 		if(keys[0x1F]==1){ //S
 			if(shown){
