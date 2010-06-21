@@ -22,9 +22,9 @@ int ColorIntB(Color c){
 	return ir < 0 ? 0 : ir;
 }
 
-int ColorTo16(Color c){
-	int cr = ColorIntB(c)>>3;
-	cr += ColorIntG(c)>>2<<5;
-	cr += ColorIntR(c)>>3<<11;
+int ColorTo24(Color c){
+	int cr = ColorIntB(c);
+	cr += ColorIntG(c)<<8;
+	cr += ColorIntR(c)<<16;
 	return cr;
 }

@@ -1,3 +1,6 @@
+#include <sys/time.h>
+#include <stdlib.h>
+
 typedef struct {
 	int x;
 	int y;
@@ -33,6 +36,25 @@ void fillrect(int x, int y, int x2, int y2, int color);
 void getinfo(screeninfo * sc);
 
 void reset();
+
+//Some common things:
+
+
+char _Rset = 0;
+
+void SR(){
+    struct timeval st;
+    gettimeofday(&st, NULL);
+    srand((unsigned int)st.tv_usec);
+	_Rset = 1;
+}
+
+double R(double max){
+	if(!_Rset) SR();
+	double r = rand();
+	r = r/RAND_MAX;
+	return r*max;
+}
 
 enum KEYS{
     KEYESC=1,

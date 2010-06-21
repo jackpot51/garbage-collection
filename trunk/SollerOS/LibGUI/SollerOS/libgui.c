@@ -17,7 +17,7 @@ unsigned char inb(int port){
 }
 
 void updatekeymap(){
- 	char key = inb(0x64);
+ 	unsigned char key = inb(0x64);
 	if(!(key&0x20)){
 		key = inb(0x60);
 		if(key>=0x80) keys[key - 0x80] = 0;

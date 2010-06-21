@@ -7,12 +7,6 @@
 
 screeninfo screen;
 
-double R(double max){
-	double r = rand();
-	r = r/RAND_MAX;
-	return r*max;
-}
-
 enum Status{
     THRUST=0x1,
     CLOCKWISE=0x2,
@@ -150,9 +144,6 @@ int main(int argc, char *argv[]){
 		    };
     int shiplen = sizeof(ships)/sizeof(ship);
     
-    struct timeval st;
-    gettimeofday(&st, NULL);
-    srand((unsigned int)st.tv_usec);
     asteroid asteroids[(int)R(20) + 2];
     char astlen = sizeof(asteroids)/sizeof(asteroid);
     int i;
@@ -160,30 +151,32 @@ int main(int argc, char *argv[]){
 	asteroids[i] = newAsteroid();
     }
     clear(0);
-    while(1){
-	if(checkkey(KEYW)) ships[0].s |= THRUST;
-	else ships[0].s &= ~THRUST;
-	if(checkkey(KEYA)) ships[0].s |= COUNTERCLOCKWISE;
-	else ships[0].s &= ~COUNTERCLOCKWISE;
-	if(checkkey(KEYD)) ships[0].s |= CLOCKWISE;
-	else ships[0].s &= ~CLOCKWISE;
+    while(!checkkey(KEYQ)){
+		if(checkkey(KEYW)) ships[0].s |= THRUST;
+		else ships[0].s &= ~THRUST;
+		if(checkkey(KEYA)) ships[0].s |= COUNTERCLOCKWISE;
+		else ships[0].s &= ~COUNTERCLOCKWISE;
+		if(checkkey(KEYD)) ships[0].s |= CLOCKWISE;
+		else ships[0].s &= ~CLOCKWISE;
 	
-	if(checkkey(KEYT)) ships[1].s |= THRUST;
-	else ships[1].s &= ~THRUST;
-	if(checkkey(KEYF)) ships[1].s |= COUNTERCLOCKWISE;
-	else ships[1].s &= ~COUNTERCLOCKWISE;
-	if(checkkey(KEYH)) ships[1].s |= CLOCKWISE;
-	else ships[1].s &= ~CLOCKWISE;
+		if(checkkey(KEYT)) ships[1].s |= THRUST;
+		else ships[1].s &= ~THRUST;
+		if(checkkey(KEYF)) ships[1].s |= COUNTERCLOCKWISE;
+		else ships[1].s &= ~COUNTERCLOCKWISE;
+		if(checkkey(KEYH)) ships[1].s |= CLOCKWISE;
+		else ships[1].s &= ~CLOCKWISE;
 	
-	if(checkkey(KEYI)) ships[2].s |= THRUST;
-	else ships[2].s &= ~THRUST;
-	if(checkkey(KEYJ)) ships[2].s |= COUNTERCLOCKWISE;
-	else ships[2].s &= ~COUNTERCLOCKWISE;
-	if(checkkey(KEYL)) ships[2].s |= CLOCKWISE;
-	else ships[2].s &= ~CLOCKWISE;
+		if(checkkey(KEYI)) ships[2].s |= THRUST;
+		else ships[2].s &= ~THRUST;
+		if(checkkey(KEYJ)) ships[2].s |= COUNTERCLOCKWISE;
+		else ships[2].s &= ~COUNTERCLOCKWISE;
+		if(checkkey(KEYL)) ships[2].s |= CLOCKWISE;
+		else ships[2].s &= ~CLOCKWISE;
 	
-	for(i = 0; i < astlen; i++) updateAsteroid(&asteroids[i]);
-	for(i = 0; i < shiplen; i++) updateShip(&ships[i]);
-	for(i = 0; i < 7; i++) hlt(); //~63 Hz
+		for(i = 0; i < astlen; i++) updateAsteroid(&asteroids[i]);
+		for(i = 0; i < shiplen; i++) updateShip(&ships[i]);
+		for(i = 0; i < 7; i++) hlt(); //~63 Hz
     }
+	reset();
+	return 0;
 }
