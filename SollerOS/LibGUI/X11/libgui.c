@@ -105,7 +105,7 @@ void hlt(){
 		gettimeofday(&_timeoday,NULL);
 		long cur = _timeoday.tv_sec*1000000 + _timeoday.tv_usec;
 		while(next<cur)
-			next += 2150;
+			next += 2250;
 		int mt = (int)(next - cur);
 		usleep(mt);
 		gettimeofday(&_timeoday,NULL);

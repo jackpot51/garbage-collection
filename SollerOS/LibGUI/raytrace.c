@@ -21,12 +21,6 @@ screeninfo *screen;
 #include "raytrace/LightIntensity.h"
 #include "raytrace/View2D.h"
 
-double R(double max){
-	double r = rand();
-	r = r/RAND_MAX;
-	return r*max;
-}
-
 void nextFrame(View2D TheImage, Camera TheCamera, Sphere s, Color bcol, LightIntensity LIntensity){
 	for(CameraStart(&TheCamera);TheCamera.from.y<1;CameraNext(&TheCamera)){
 		Vector v = {0,0,0};
@@ -48,10 +42,6 @@ int main(int argc, char *argv[]){
 	}
 	clear(0);
 	
-	struct timeval st;
-	gettimeofday(&st, NULL);
-	srand((unsigned int)st.tv_usec);
-	
 	Vector p = {0,0,0};
 	Color c = {R(1),R(1),R(1)};
 	Sphere s = {0.5,p,c};
@@ -67,24 +57,23 @@ int main(int argc, char *argv[]){
 	
 	nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
 
-	drawtext(0,0,0,0xFFFF,"Press q to exit.");	
+	drawtext(0,0,0,0xFFFFFF,"Press q to exit.");	
 	unsigned char key = 0;
-	while(key!=0x10){
-			key = inb(0x60);
+	while(!checkkey(KEYQ)){
 			hlt();
-			if(key==0x48 & LIntensity.light.y<1){ //up
+			if(checkkey(KEYUP) & LIntensity.light.y<1){
 					LIntensity.light.y-=0.4;
 					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
 			}
-			if(key==0x50 & LIntensity.light.y>-1){ //down
+			if(checkkey(KEYDOWN) & LIntensity.light.y>-1){
 					LIntensity.light.y+=0.4;
 					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
 			}
-			if(key==0x4B & LIntensity.light.x>-1){ //left
+			if(checkkey(KEYLEFT) & LIntensity.light.x>-1){
 					LIntensity.light.x-=0.4;
 					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
 			}
-			if(key==0x4D & LIntensity.light.x<1){ //right
+			if(checkkey(KEYRIGHT) & LIntensity.light.x<1){
 					LIntensity.light.x+=0.4;
 					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
 			}

@@ -18,12 +18,11 @@ typedef struct {
 } screeninfo;
 
 char keys[128];
-
 HDC _hdc;
 HWND _win;
-
-int _winset = 0;
-
+char _winset = 0;
+char _timeset = 0;
+struct timeval _timeoday;
 char _set = 0;
 char _painting = 0;
 
@@ -93,7 +92,7 @@ DWORD WINAPI WindowThread(LPVOID lpParam){
 void _setup(){
      int nodata;
      _beginthread(WindowThread, 0, &nodata);
-     while(!_winset) sleep(1);
+     while(!_winset) Sleep(100);
 //     CreateThread(NULL,0,WindowThread,&nodata,0,NULL);
 //     if(_win != NULL) _hdc = GetDC(_win);
 //     else _hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
@@ -106,7 +105,23 @@ void updatekeymap(){}
 
 char checkkey(char key){return 0;}
 
-void hlt(){}
+void hlt(){
+	if(!_timeset){
+		Sleep(2);
+		gettimeofday(&_timeoday,NULL);
+		_timeset = 1;
+	}else{
+		long next = _timeoday.tv_sec*1000000 + _timeoday.tv_usec;
+		gettimeofday(&_timeoday,NULL);
+		long cur = _timeoday.tv_sec*1000000 + _timeoday.tv_usec;
+		while(next<cur)
+			next += 2250;
+		int mt = (int)(next - cur);
+		Sleep(mt/1000);
+		gettimeofday(&_timeoday,NULL);
+	}
+	updatekeymap();
+}
 
 COLORREF Convert(int color){
     int ret = ((color&0xFF)<<16);

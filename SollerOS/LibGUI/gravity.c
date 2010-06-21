@@ -73,12 +73,6 @@ void physdraw(physobj *p){
 	//p->vz = p->vz + p->az;
 }
 
-int R(int max){
-	double r = rand();
-	r = r/RAND_MAX;
-	return (int)(r*max);
-}
-
 double sqroot(double m)
 {
 	double r;
@@ -109,8 +103,7 @@ int main(int argc, char **argv){
 while(running){
 	int simtime = 0;
 	gettimeofday(&st, NULL);
-	srand((unsigned int)st.tv_usec);
-	physobj obj[R(20) + 2];
+	physobj obj[(int)R(20) + 2];
 	char len = sizeof(obj)/sizeof(physobj);
 	char i;
 	for(i=0;i<len;i++){
@@ -125,7 +118,7 @@ while(running){
 		//obj[i].az=0;
 		obj[i].m=R(10)+1;
 		obj[i].r=obj[i].m*10;
-		obj[i].color=R(65535);
+		obj[i].color=R(0xFFFFFF);
 	}
 	physobj ogobj[len];
 	memcpy(ogobj,obj,sizeof(obj));
@@ -226,43 +219,27 @@ while(running){
 			drawtext(screen->x - 48,screen->y - 16,BG,~BG,"Paused");
 			hlt();
 		}
-		key = inb(0x64);
-		if(!(key&0x20)){
-			key = inb(0x60);
-			if(key>=0x80) keys[key - 0x80] = 0;
-			else if(keys[key]==0) keys[key] = 1;
-			else if(keys[key]==1) keys[key] = 2;
-		}else{
-			key=0;
-		}
 		for(i=0;i<ips;i++){
 			hlt();
-			key = inb(0x64);
-			if(!(key&0x20)){
-				key = inb(0x60);
-				if(key>=0x80) keys[key - 0x80] = 0;
-				else if(keys[key]==0) keys[key] = 1;
-			}else{
-				key=0;
-			}
 		}
-		if(keys[1] | keys[0x10]) running = 0; //ESC or Q
-		if(keys[0xC]) ds = ds*=1.005; //minus
-		if(keys[0xD]>0 & ds > 1) ds/=1.005; //plus
-		if(keys[0x13]==1){ //R
+		if(ips==0) updatekeymap();
+		if(checkkey(1) | checkkey(KEYQ)) running = 0; //ESC or Q
+		if(checkkey(KEYMINUS)) ds = ds*=1.005; //minus
+		if(checkkey(KEYEQUAL)>0 & ds > 1) ds/=1.005; //plus
+		if(checkkey(KEYR)==1){ //R
 			memcpy(obj,ogobj,sizeof(ogobj));
 			clear(BG);
 		}
-		if(keys[0x19]==1){//P
+		if(checkkey(KEYP)==1){//P
 			if(pause){
 				pause = 0;
 				clear(BG);
 			}
 			else pause = 1;
 		}
-		if(keys[0x1A]==1 & ips < 127) ips+=1; //left square bracket
-		if(keys[0x1B]==1 & ips > 0) ips-=1; //rigt square bracket
-		if(keys[0x1F]==1){ //S
+		if(checkkey(KEYLEFTBRACKET)==1 & ips < 127) ips+=1; //left square bracket
+		if(checkkey(KEYRIGHTBRACKET)==1 & ips > 0) ips-=1; //rigt square bracket
+		if(checkkey(KEYS)==1){ //S
 			if(shown){
 				ips = 0;
 				shown = 0;
@@ -270,35 +247,35 @@ while(running){
 			}
 			else shown= 1;
 		}
-		if(keys[0x21]==1){ //F
+		if(checkkey(KEYF)==1){ //F
 			if(fpsonly==2)	fpsonly=0;
 			else{
 				fpsonly++;
 				clear(BG);
 			}
 		}
-		if(keys[0x23]==1){ //H
+		if(checkkey(KEYH)==1){ //H
 			if(help){
 				help=0;
 				clear(BG);
 			}
 			else help=1;
 		}
-		if(keys[0x26]==1){ //L
+		if(checkkey(KEYL)==1){ //L
 			if(lines) lines=0;
 			else lines=1;
 		}
-		if(keys[0x2D]==1){ //X
+		if(checkkey(KEYX)==1){ //X
 			ox = screen->x*2/5;
 			oy = screen->y*2/5;
 			ds = 5;
 		}
-		if(keys[0x2E]==1) clear(BG); //C
-		if(keys[0x31]==1) continued=0; //N
-		if(keys[0x48]) oy += 2; //up
-		if(keys[0x50]) oy -= 2; //down
-		if(keys[0x4B]) ox += 2; //left
-		if(keys[0x4D]) ox -= 2; //right
+		if(checkkey(KEYC)==1) clear(BG); //C
+		if(checkkey(KEYN)==1) continued=0; //N
+		if(checkkey(KEYUP)) oy += 2; //up
+		if(checkkey(KEYDOWN)) oy -= 2; //down
+		if(checkkey(KEYLEFT)) ox += 2; //left
+		if(checkkey(KEYRIGHT)) ox -= 2; //right
 	}
 }
 	reset();
