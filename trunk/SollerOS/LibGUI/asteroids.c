@@ -172,7 +172,7 @@ int main(int argc, char *argv[]){
 		else ships[2].s &= ~COUNTERCLOCKWISE;
 		if(checkkey(KEYL)) ships[2].s |= CLOCKWISE;
 		else ships[2].s &= ~CLOCKWISE;
-	
+		
 		for(i = 0; i < astlen; i++) updateAsteroid(&asteroids[i]);
 		for(i = 0; i < shiplen; i++) updateShip(&ships[i]);
 		for(i = 0; i < 7; i++) hlt(); //~63 Hz

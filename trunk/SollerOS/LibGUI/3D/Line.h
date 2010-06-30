@@ -1,34 +1,18 @@
 void drawline3D(double ax, double ay, double az, //first 3d point
 		double bx, double by, double bz, //second 3d point
 		double cx, double cy, double cz, //camera location
-		double tx, double ty, double tz, //camera rotation, radians
+		double ox, double oy, double oz, //camera rotation, radians
 		double ex, double ey, double ez, //viewer location
 		int color){
-	double dx = cos(ty)*(sin(tz)*(ay-cy)+cos(tz)*(ax-cx))-sin(ty)*(az-cz);
-	double dy = sin(tx)*(cos(ty)*(az-cz)+sin(ty)*(sin(tz)*(ay-cy)+cos(tz)*(ax-cx)))+cos(tx)*(cos(tz)*(ay-cy)-sin(tz)*(ax-cx));
-	double dz = cos(tx)*(cos(ty)*(az-cz)+sin(ty)*(sin(tz)*(ay-cy)+cos(tz)*(ax-cx)))-sin(tx)*(cos(tz)*(ay-cy)-sin(tz)*(ax-cx));
-	if(ez/dz < 0) return;
-	double px = (dx-ex)*(ez/dz)*screen.x/2 + screen.x/2;
-	double py = (dy-ey)*(ez/dz)*screen.y/2 + screen.y/2;
+	Point p = convertPoint(ax, ay, az, cx, cy, cz, ox, oy, oz, ex, ey, ez);
+	
+	if(p.x < 0 | p.y < 0 | p.x >= screen.x | p.y >= screen.x) return;
 
-	if(px < 0) return;//px=0;
-	if(px > screen.x) return;//px=screen.x-1;
-	if(py < 0) return;//py=0;
-	if(py > screen.y) return;//py=screen.y-1;
+	Point q = convertPoint(bx, by, bz, cx, cy, cz, ox, oy, oz, ex, ey, ez);
 
-	dx = cos(ty)*(sin(tz)*(by-cy)+cos(tz)*(bx-cx))-sin(ty)*(bz-cz);
-	dy = sin(tx)*(cos(ty)*(bz-cz)+sin(ty)*(sin(tz)*(by-cy)+cos(tz)*(bx-cx)))+cos(tx)*(cos(tz)*(by-cy)-sin(tz)*(bx-cx));
-	dz = cos(tx)*(cos(ty)*(bz-cz)+sin(ty)*(sin(tz)*(by-cy)+cos(tz)*(bx-cx)))-sin(tx)*(cos(tz)*(by-cy)-sin(tz)*(bx-cx));
-	if(ez/dz < 0) return;
-	double qx = (dx-ex)*(ez/dz)*screen.x/2 + screen.x/2;
-	double qy = (dy-ey)*(ez/dz)*screen.y/2 + screen.y/2;
+	if(q.x < 0 | q.y < 0 | q.x >= screen.x | q.y >= screen.x) return;
 
-	if(qx < 0) return;//qx=0;
-	if(qx > screen.x) return;//qx=screen.x-1;
-	if(qy < 0) return;//qy=0;
-	if(qy > screen.y) return;//qy=screen.y-1;
-
-	drawline((int)px, (int)py, (int)qx, (int)qy, color);
+	drawline((int)p.x, (int)p.y, (int)q.x, (int)q.y, color);
 } 
 
 typedef struct{
@@ -39,24 +23,20 @@ typedef struct{
     double bx;
     double by;
     double bz;
+    
+    int color;
 } Line;
 
-typedef struct{
-    double x;
-    double y;
-    double z;
-} Vertex;
-
-void drawLineCam(Line l, Camera c, int color){
+void drawLineCam(Line l, Camera c){
     drawline3D(l.ax, l.ay, l.az,
 	       l.bx, l.by, l.bz,
 	       c.cx, c.cy, c.cz,
 	       c.ox, c.oy, c.oz,
 	       c.ex, c.ey, c.ez,
-	       color);
+	       l.color);
 }
 
-Line lineVertex(Vertex a, Vertex b){
+Line lineVertex(Vertex a, Vertex b, int color){
     Line l;
     l.ax = a.x;
     l.ay = a.y;
@@ -65,12 +45,14 @@ Line lineVertex(Vertex a, Vertex b){
     l.bx = b.x;
     l.by = b.y;
     l.bz = b.z;
+    
+    l.color = color;
     return l;
 }
 
-void drawLines(Line lines[], int length, int color, Camera cam){
+void drawLines3D(Line lines[], int length, Camera cam){
 	int i;
 	for(i = 0; i < length; i++){
-	    drawLineCam(lines[i], cam, color);
+	    drawLineCam(lines[i], cam);
 	}
 }

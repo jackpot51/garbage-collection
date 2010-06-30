@@ -40,6 +40,12 @@ void resetPlayer(Player *p, Camera c){
 }
 
 void updatePlayer(Player *p){
+    if(p->o.y > 0) p->o.fy = -1;
+    else if(p->o.y < 0){
+	p->o.fy = 0;
+	p->o.vy = 0;
+	p->o.y = 0;
+    }
     updateObject(&(p->o));
     p->c.ox=p->o.ox;
     p->c.oy=p->o.oy;
