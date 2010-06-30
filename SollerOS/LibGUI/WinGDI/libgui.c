@@ -20,6 +20,7 @@ typedef struct {
 char keys[128];
 HDC _hdc;
 HWND _win;
+PAINTSTRUCT ps;
 char _winset = 0;
 char _timeset = 0;
 struct timeval _timeoday;
@@ -35,8 +36,15 @@ static TCHAR szClassName[] = TEXT("LibGUI");
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam){
         switch (message){
+               case WM_KEYUP:
+                    keys[(lParam>>16)&0x7F]=1;
+                    break;
+               case WM_KEYDOWN:
+                    keys[(lParam>>16)&0x7F]=0;
+                    break;
                case WM_PAINT:
                     _painting = 1;
+                    _hdc = BeginPaint(_win, &ps);
                     break;
                case WM_DESTROY:
                     PostQuitMessage(0);
@@ -92,18 +100,21 @@ DWORD WINAPI WindowThread(LPVOID lpParam){
 void _setup(){
      int nodata;
      _beginthread(WindowThread, 0, &nodata);
-     while(!_winset) Sleep(100);
+     while(!_winset) Sleep(1);
 //     CreateThread(NULL,0,WindowThread,&nodata,0,NULL);
 //     if(_win != NULL) _hdc = GetDC(_win);
 //     else _hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
      _set = 1;
 }
 
+void updatekeymap(){}
 unsigned char inb(int port){return 0;}
 
-void updatekeymap(){}
-
-char checkkey(char key){return 0;}
+char checkkey(char key){
+    char ret = keys[key];
+    if(keys[key]==1) keys[key]=2;
+    return ret;
+}
 
 void hlt(){
 	if(!_timeset){
@@ -120,22 +131,18 @@ void hlt(){
 		Sleep(mt/1000);
 		gettimeofday(&_timeoday,NULL);
 	}
-	updatekeymap();
 }
 
 COLORREF Convert(int color){
-    int ret = ((color&0xFF)<<16);
+    COLORREF ret = ((color&0xFF)<<16);
     ret += color&0xFF00;
     ret += ((color&0xFF0000)>>16);
-    return (COLORREF) ret;
+    return ret;
 }
-
-PAINTSTRUCT ps;
 
 void StartPaint(){
      InvalidateRect(_win, NULL, FALSE);
-     while(!_painting);
-     _hdc = BeginPaint(_win, &ps);
+     while(!_painting) Sleep(1);
 }
 
 void StopPaint(){

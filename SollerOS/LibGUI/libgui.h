@@ -17,6 +17,9 @@ char checkkey(char key);
 
 void hlt();
 
+void StartPaint();
+void StopPaint();
+
 void clear(int color);
 
 void putpixel(int x, int y, int color);
