@@ -64,16 +64,16 @@ unsigned char inb(int port){
 void updatekeymap(){
     XEvent e;
     while(XCheckWindowEvent(_dpy, _win, KeyPressMask | KeyReleaseMask , &e)){
-	char key = e.xkey.keycode - 8;
-	    if(e.type==KeyRelease){
-		keys[key] |= 0x80;
-		keys[key] &= 0xBF;
+		char key = e.xkey.keycode;
+		if(e.type==KeyRelease){
+			keys[key] |= 0x80;
+			keys[key] &= 0xBF;
+		}
+		else if(e.type==KeyPress){
+			keys[key] |= 0x40;
+			keys[key] &= 0x7F;
 	    }
-	    else if(e.type==KeyPress){
-		keys[key] |= 0x40;
-		keys[key] &= 0x7F;
-	    }
-    }
+	}
     int i;
     for(i = 0; i < sizeof(keys); i++){
 	if(keys[i] & 0x40){
