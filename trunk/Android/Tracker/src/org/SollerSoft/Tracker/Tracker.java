@@ -7,6 +7,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,7 +19,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class Tracker extends Activity implements SensorEventListener {
+public class Tracker extends Activity implements SensorEventListener,LocationListener{
     /** Called when the activity is first created. */
 	boolean running = false;
 	Button btngps;
@@ -28,6 +31,7 @@ public class Tracker extends Activity implements SensorEventListener {
 	Spinner senspin;
 	List<Sensor> sensors;
 	SensorManager sm;
+	LocationManager lm;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,8 +43,13 @@ public class Tracker extends Activity implements SensorEventListener {
         txtx = (TextView)findViewById(R.id.TextViewX);
         txty = (TextView)findViewById(R.id.TextViewY);
         txtz = (TextView)findViewById(R.id.TextViewZ);
-        sm = (SensorManager)getSystemService(SENSOR_SERVICE);
-    	ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item);
+        try{
+        	sm = (SensorManager)getSystemService(SENSOR_SERVICE);
+        	lm = (LocationManager)getSystemService(LOCATION_SERVICE);
+        }catch(Exception ex){
+        	print(ex.getMessage());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item);
     	adapter.add("None");
 	    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	    senspin.setAdapter(adapter);
@@ -69,19 +78,37 @@ public class Tracker extends Activity implements SensorEventListener {
     }
     public void SensorRegister(String sensor){
     	clear();
-		for(int i = 0; i < sensors.size(); i++){
-			Sensor s = sensors.get(i);
-			if(s.getName() == sensor){
-	        	sm.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
-	        	print("Registered listener for " + s.getName() + "\n");
-	    		print("\tSensor power: " + s.getPower() + " mA\n");
-	    		print("\tSensor resolution: " + s.getResolution() + "\n");
-	    		print("\tSensor range: " + s.getMaximumRange() + "\n");
-			}
-		}
     	running = true;
+    	if(sensor == "Location"){
+    		print("Registered listener for " + sensor + "\n");
+    		try{
+        		lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        		Location loc = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        		if(loc != null) onLocationChanged(loc);
+    		}catch(Exception ex){
+				print(ex.getMessage());
+    			running = false;
+    		}
+    	}else{
+    		for(int i = 0; i < sensors.size(); i++){
+				Sensor s = sensors.get(i);
+				if(s.getName() == sensor){
+					try{
+						sm.registerListener(this, s, SensorManager.SENSOR_DELAY_NORMAL);
+					}catch(Exception ex){
+						print(ex.getMessage());
+						running = false;
+					}
+	        		print("Registered listener for " + s.getName() + "\n");
+	    			print("\tSensor power: " + s.getPower() + " mA\n");
+	    			print("\tSensor resolution: " + s.getResolution() + "\n");
+	    			print("\tSensor range: " + s.getMaximumRange() + "\n");
+				}
+			}
+    	}
     }
     public void SensorKill(){
+    	lm.removeUpdates(this);
 		sm.unregisterListener(this);
 		print("Unregistered listeners.\n");
 		running = false;
@@ -91,6 +118,7 @@ public class Tracker extends Activity implements SensorEventListener {
     	sensors = sm.getSensorList(Sensor.TYPE_ALL);
     	ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item);
     	adapter.add("None");
+    	adapter.add("Location");
     	for(int i = 0; i < sensors.size(); i++){
     		Sensor s = sensors.get(i);    		
     		print("Found sensor " + s.getName() + "\n");
@@ -103,15 +131,12 @@ public class Tracker extends Activity implements SensorEventListener {
     	Sensor s = event.sensor;
     	float[] values = event.values;
     	print("Data from sensor " + s.getName() + "\n");
-    	Float x = new Float(0);
-    	Float y = new Float(0);
-    	Float z = new Float(0);
-    	if(values.length>0) x = values[0];
-    	if(values.length>1) y = values[1];
-    	if(values.length>2) z = values[2];
-		txtx.setText("X:" + x.toString());
-		txty.setText("Y:" + y.toString());
-		txtz.setText("Z:" + z.toString());
+    	if(values.length>0)
+    		txtx.setText("X: " + values[0]);
+    	if(values.length>1)
+    		txty.setText("Y: " + values[1]);
+    	if(values.length>2)
+    		txtz.setText("Z: " + values[2]);
     	for(int i = 0; i < values.length; i++){
         	print("\t" + values[i] + "\n");	
     	}
@@ -119,5 +144,28 @@ public class Tracker extends Activity implements SensorEventListener {
 	public void onAccuracyChanged(Sensor arg0, int arg1) {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public void onLocationChanged(Location location) {
+		txtx.setText("Latitude: " + location.getLatitude());
+		txty.setText("Longitude: " + location.getLongitude());
+		txtz.setText("Altitude: " + location.getAltitude());
+		print("Latitude: " + location.getLatitude() +
+				"\nLongitude: " + location.getLongitude() +
+				"\nAltitude: " + location.getAltitude() + "\n");
+		
+	}
+	@Override
+	public void onProviderDisabled(String provider) {
+		print("GPS Disabled\n");
+	}
+	@Override
+	public void onProviderEnabled(String provider) {
+		print("GPS Enabled\n");
+	}
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras) {
+		// TODO Auto-generated method stub
+		print("GPS Status: " + status + "\n");
 	}
 }
