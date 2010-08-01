@@ -1,19 +1,19 @@
 @echo OFF
-gcc.exe -c asteroids.c -o asteroids.o -I"C:/Dev-Cpp/include"    -g3
-gcc.exe asteroids.o  -o "WinGDI/asteroids.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a  -g3
-rm asteroids.o
-gcc.exe -c gravity.c -o gravity.o -I"C:/Dev-Cpp/include"    -g3
-gcc.exe gravity.o  -o "WinGDI/gravity.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a  -g3
-rm gravity.o
-gcc.exe -c raytrace.c -o raytrace.o -I"C:/Dev-Cpp/include"    -g3
-gcc.exe raytrace.o  -o "WinGDI/raytrace.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a  -g3
-rm raytrace.o
-gcc.exe -c screensaver.c -o screensaver.o -I"C:/Dev-Cpp/include"    -g3
-gcc.exe screensaver.o  -o "WinGDI/screensaver.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a  -g3
-rm screensaver.o
-gcc.exe -c 3d.c -o 3d.o -I"C:/Dev-Cpp/include"    -g3
+gcc.exe -msse3 -c asteroids.c -o asteroids.o -I"C:/Dev-Cpp/include" -g3
+gcc.exe asteroids.o  -o "WinGDI/asteroids.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a -g3
+del asteroids.o
+gcc.exe -msse3 -c gravity.c -o gravity.o -I"C:/Dev-Cpp/include" -g3
+gcc.exe gravity.o  -o "WinGDI/gravity.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a -g3
+del gravity.o
+gcc.exe -msse3 -c raytrace.c -o raytrace.o -I"C:/Dev-Cpp/include" -g3
+gcc.exe raytrace.o  -o "WinGDI/raytrace.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a -g3
+del raytrace.o
+gcc.exe -msse3 -c screensaver.c -o screensaver.o -I"C:/Dev-Cpp/include" -g3
+gcc.exe screensaver.o  -o "WinGDI/screensaver.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a -g3
+del screensaver.o
+gcc.exe -msse3 -c 3d.c -o 3d.o -I"C:/Dev-Cpp/include" -g3
 gcc.exe 3d.o  -o "WinGDI/3d.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a -g3
-rm 3d.o
+del 3d.o
 
 
 REM FOR CYGWIN:
@@ -27,3 +27,5 @@ REM gcc-4 -s asteroids.c -L cygwin -lgui -lX11 -lm -o cygwin/asteroids.exe
 REM gcc-4 -s gravity.c -L cygwin -lgui -lX11 -o cygwin/gravity.exe
 REM gcc-4 -s raytrace.c -L cygwin -lgui -lX11 -o cygwin/raytrace.exe
 REM gcc-4 -s screensaver.c -L cygwin -lgui -lX11 -o cygwin/screensaver.exe
+
+pause

@@ -1,11 +1,12 @@
-scc="/SollerOS/cross/bin/i586-pc-solleros-gcc"
-$scc -s 3d.c -L SollerOS -lgui -lm -o SollerOS/3d.elf
-$scc -s asteroids.c -L SollerOS -lgui -lm -o SollerOS/asteroids.elf
-$scc -s gravity.c -L SollerOS -lgui -o SollerOS/gravity.elf
-$scc -s raytrace.c -L SollerOS -lgui -o SollerOS/raytrace.elf
-$scc -s screensaver.c -L SollerOS -lgui -o SollerOS/screensaver.elf
-gcc 3d.c -LOSX -lgui -L/usr/X11/lib -lX11 -lm -o OSX/3d
-gcc asteroids.c -LOSX -lgui -L/usr/X11/lib -lX11 -lm -o OSX/asteroids
-gcc gravity.c -LOSX -lgui -L/usr/X11/lib -lX11 -o OSX/gravity
-gcc raytrace.c -LOSX -lgui -L/usr/X11/lib -lX11 -o OSX/raytrace
-gcc screensaver.c -LOSX -lgui -L/usr/X11/lib -lX11 -o OSX/screensaver
+scc="/SollerOS/cross/bin/i586-pc-solleros-gcc -lgui -LSollerOS"
+$scc -s 3d.c -lm -o SollerOS/3d.elf
+$scc -s asteroids.c -lm -o SollerOS/asteroids.elf
+$scc -s gravity.c  -o SollerOS/gravity.elf
+$scc -s raytrace.c -o SollerOS/raytrace.elf
+$scc -s screensaver.c -o SollerOS/screensaver.elf
+hcc="gcc -LOSX -lgui -L/usr/X11/lib -lX11 -msse3"
+$hcc 3d.c -lm -o OSX/3d
+$hcc asteroids.c -lm -o OSX/asteroids
+$hcc gravity.c -o OSX/gravity
+$hcc raytrace.c -o OSX/raytrace
+$hcc screensaver.c -o OSX/screensaver
