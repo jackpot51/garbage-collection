@@ -87,7 +87,6 @@ double sqroot(double m)
 int main(int argc, char **argv){
 	screen = malloc(sizeof(screeninfo));
 	getinfo(screen);
-	printf("hi\n");
 	if(!screen->x | !screen->y){
 		return 1;
 	}
@@ -209,7 +208,7 @@ while(running){
 				}
 			}else if((et.tv_sec - st.tv_sec)>0){
 				simtime += et.tv_sec - st.tv_sec;
-				sprintf(s,"FPS:%04d    ",frames/(et.tv_sec - st.tv_sec));
+				sprintf(s,"FPS:%04d    ",frames/(int)(et.tv_sec - st.tv_sec));
 				st=et;
 				lastframes = frames;
 				frames = 0;
