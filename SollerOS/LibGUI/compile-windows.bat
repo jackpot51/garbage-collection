@@ -14,7 +14,9 @@ del screensaver.o
 gcc.exe -msse3 -c 3d.c -o 3d.o -I"C:/Dev-Cpp/include" -g3
 gcc.exe 3d.o  -o "WinGDI/3d.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a -g3
 del 3d.o
-
+gcc.exe -msse3 -c physics.c -o physics.o -I"C:/Dev-Cpp/include" -g3
+gcc.exe physics.o  -o "WinGDI/physics.exe" -L"C:/Dev-Cpp/lib" -mwindows WinGDI/libgui.a -g3
+del physics.o
 
 REM FOR CYGWIN:
 REM set PATH=%PATH%;\cygwin\bin

@@ -5,6 +5,7 @@ $scc -s gravity.c  -o SollerOS/gravity.elf
 $scc -s raytrace.c -o SollerOS/raytrace.elf
 $scc -s screensaver.c -o SollerOS/screensaver.elf
 hcc="gcc -LOSX -lgui -L/usr/X11/lib -lX11 -msse3"
+$hcc physics.c -lm -o OSX/physics
 $hcc 3d.c -lm -o OSX/3d
 $hcc asteroids.c -lm -o OSX/asteroids
 $hcc gravity.c -o OSX/gravity
