@@ -1,5 +1,5 @@
 //an attempt to use a C library with GUI calls in a C program
-#include "libgui.h"
+#include <libgui.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -192,19 +192,19 @@ while(running){
 						sprintf(s,"%s FPS:%04d    ",s,fr);
 						frames = 0;
 					}else sprintf(s,"%s FPS:%04d    ",s,fr);
-					drawtext(0,0,BG,~BG,s);
+					drawtext(0,0,s,~BG);
 				}
 				if(help){
 					int y = screen->y - screen->y%16 - 80;
-					drawtext(0,y,BG,~BG,"Press 'Q' or ESC to exit, '+' to zoom in, '-' to zoom out, '[' to decrease");
+					drawtext(0,y,"Press 'Q' or ESC to exit, '+' to zoom in, '-' to zoom out, '[' to decrease",~BG);
 					y += 16;
-					drawtext(0,y,BG,~BG,"speed, ']' to increase speed, 'H' show help, 'S' to simulate in the background,");
+					drawtext(0,y,"speed, ']' to increase speed, 'H' show help, 'S' to simulate in the background,",~BG);
 					y += 16;
-					drawtext(0,y,BG,~BG,"'L' to toggle lines, 'X' to reset zoom and offset, 'C' to remove artifacts,");
+					drawtext(0,y,"'L' to toggle lines, 'X' to reset zoom and offset, 'C' to remove artifacts,",~BG);
 					y += 16;
-					drawtext(0,y,BG,~BG,"'P to pause, F to only show the framerate, 'N' to generate a new system,");
+					drawtext(0,y,"'P to pause, F to only show the framerate, 'N' to generate a new system,",~BG);
 					y += 16;
-					drawtext(0,y,BG,~BG,"and the arrow keys to change the offset.");
+					drawtext(0,y,"and the arrow keys to change the offset.",~BG);
 				}
 			}else if((et.tv_sec - st.tv_sec)>0){
 				simtime += et.tv_sec - st.tv_sec;
@@ -212,10 +212,10 @@ while(running){
 				st=et;
 				lastframes = frames;
 				frames = 0;
-				drawtext(0,0,BG,~BG,s);
+				drawtext(0,0,s,~BG);
 			}
 		}else{
-			drawtext(screen->x - 48,screen->y - 16,BG,~BG,"Paused");
+			drawtext(screen->x - 48,screen->y - 16,"Paused",~BG);
 			hlt();
 		}
 		for(i=0;i<ips;i++){

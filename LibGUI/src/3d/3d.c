@@ -1,16 +1,15 @@
-#include "libgui.h"
+#include <libgui.h>
 screeninfo screen;
 #include <math.h>
 char wireframe = 0;
-#include "3D/Camera.h"
-#include "3D/Object.h"
-#include "3D/Player.h"
-#include "3D/Point.h"
-#include "3D/Line.h"
-#include "3D/Triangle.h"
-#include "3D/Sphere.h"
-#include "3D/Cube.h"
-//#include <stdio.h>
+#include "Camera.h"
+#include "Object.h"
+#include "Player.h"
+#include "Point.h"
+#include "Line.h"
+#include "Triangle.h"
+#include "Sphere.h"
+#include "Cube.h"
 
 int main(int argc, char *argv[]){
 	getinfo(&screen);
@@ -82,7 +81,7 @@ int main(int argc, char *argv[]){
 		    for(i = 0; i < sizeof(c)/sizeof(Cube); i++) drawCube(c[i], p.c);
 		    drawLines3D(complex, sizeof(complex)/sizeof(Line), p.c);
 		    
-		    drawtext(0,0,0,0xFFFFFF,"Wireframe test. Press q to exit.");
+		    drawtext(0,0,"Wireframe test. Press q to exit.",0xFFFFFF);
 		    drawline(screen.x/2-8,screen.y/2,screen.x/2+8,screen.y/2,0xFFFFFF);
 		    drawline(screen.x/2,screen.y/2-8,screen.x/2,screen.y/2+8,0xFFFFFF);
 
