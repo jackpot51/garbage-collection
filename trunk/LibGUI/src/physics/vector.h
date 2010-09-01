@@ -34,7 +34,7 @@ Vector VectorCross(Vector a, Vector b){
 }
 
 long double VectorMag(Vector a){
-	return sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+	return sqrtl(a.x*a.x+a.y*a.y+a.z*a.z);
 }
 
 long double VectorMag2(Vector a){

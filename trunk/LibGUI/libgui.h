@@ -1,6 +1,3 @@
-#include <sys/time.h>
-#include <stdlib.h>
-
 typedef struct {
 	int x;
 	int y;
@@ -9,22 +6,17 @@ typedef struct {
 
 char keys[128];
 
-unsigned char inb(int port);
-
 void updatekeymap();
 
 char checkkey(char key);
 
 void hlt();
 
-void StartPaint();
-void StopPaint();
-
 void clear(int color);
 
 void putpixel(int x, int y, int color);
 
-void drawtext(int x, int y, int back, int fore, char *text);
+void drawtext(int x, int y, char *text, int color);
 
 void drawline(int x, int y, int x2, int y2, int color);
 
@@ -40,24 +32,7 @@ void getinfo(screeninfo * sc);
 
 void reset();
 
-//Some common things:
-
-
-char _Rset = 0;
-
-void SR(){
-    struct timeval st;
-    gettimeofday(&st, NULL);
-    srand((unsigned int)st.tv_usec);
-	_Rset = 1;
-}
-
-double R(double max){
-	if(!_Rset) SR();
-	double r = rand();
-	r = r/RAND_MAX;
-	return r*max;
-}
+double R(double max);
 
 enum KEYS{
     KEYESC=1,

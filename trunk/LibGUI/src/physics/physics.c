@@ -1,14 +1,15 @@
 #include <math.h>
 #include <stdio.h>
-#include "libgui.h"
-#include "physics/vector.h"
-#include "physics/point.h"
-#include "physics/object.h"
-#include "physics/collision.h"
-#include "physics/particle.h"
-#include "physics/boson.h"
-#include "physics/lepton.h"
-#include "physics/quark.h"
+#include <stdlib.h>
+#include <libgui.h>
+#include "vector.h"
+#include "point.h"
+#include "object.h"
+#include "collision.h"
+#include "particle.h"
+#include "boson.h"
+#include "lepton.h"
+#include "quark.h"
 
 #define HLTTIME 1
 long double G = 6.67428E-11;
@@ -106,7 +107,7 @@ int main(int argc, char **argv){
 			if(showstats){
 				char stats[256];
 				sprintf(stats, "#:%d P:<%LE,%LE,%LE> KE:%LE GPE:%LE E:%LE", blen, tm.x, tm.y, tm.z, ke, gpe, ke+gpe);
-				drawtext(0,0,0,0xFFFFFF,stats);
+				drawtext(0,0,stats,0xFFFFFF);
 			}
 			for(i=0; i<HLTTIME; i++) hlt();
 			if(checkkey(KEYA)) cam.x -= HLTTIME*1.6;

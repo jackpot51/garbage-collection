@@ -1,4 +1,4 @@
-#include "libgui.h"
+#include <libgui.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -13,13 +13,13 @@ double sqroot(double m)
 	return r;
 }
 screeninfo *screen;
-#include "raytrace/Vector.h"
-#include "raytrace/Camera.h"
-#include "raytrace/Color.h"
-#include "raytrace/Sphere.h"
-#include "raytrace/Light.h"
-#include "raytrace/LightIntensity.h"
-#include "raytrace/View2D.h"
+#include "Vector.h"
+#include "Camera.h"
+#include "Color.h"
+#include "Sphere.h"
+#include "Light.h"
+#include "LightIntensity.h"
+#include "View2D.h"
 
 void nextFrame(View2D TheImage, Camera TheCamera, Sphere s, Color bcol, LightIntensity LIntensity){
 	for(CameraStart(&TheCamera);TheCamera.from.y<1;CameraNext(&TheCamera)){
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
 	
 	nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
 
-	drawtext(0,0,0,0xFFFFFF,"Press q to exit.");	
+	drawtext(0,0,"Press q to exit.",0xFFFFFF);	
 	unsigned char key = 0;
 	while(!checkkey(KEYQ)){
 			hlt();
