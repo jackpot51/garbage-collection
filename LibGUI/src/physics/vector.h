@@ -1,7 +1,7 @@
 typedef struct {
-	long double x;
-	long double y;
-	long double z;
+	FPN x;
+	FPN y;
+	FPN z;
 } Vector;
 
 Vector VectorAdd(Vector a, Vector b){
@@ -14,17 +14,17 @@ Vector VectorSub(Vector a, Vector b){
 	return ret;
 }
 
-Vector VectorMul(Vector a, long double b){
+Vector VectorMul(Vector a, FPN b){
 	Vector ret = {a.x*b, a.y*b, a.z*b};
 	return ret;
 }
 
-Vector VectorDiv(Vector a, long double b){
+Vector VectorDiv(Vector a, FPN b){
 	Vector ret = {a.x/b, a.y/b, a.z/b};
 	return ret;
 }
 
-long double VectorDot(Vector a, Vector b){
+FPN VectorDot(Vector a, Vector b){
 	return a.x*b.x+a.y*b.y+a.z*b.z;
 }
 
@@ -33,16 +33,16 @@ Vector VectorCross(Vector a, Vector b){
 	return ret;
 }
 
-long double VectorMag(Vector a){
-	return sqrtl(a.x*a.x+a.y*a.y+a.z*a.z);
+FPN VectorMag(Vector a){
+	return SQRT(a.x*a.x+a.y*a.y+a.z*a.z);
 }
 
-long double VectorMag2(Vector a){
+FPN VectorMag2(Vector a){
 	return a.x*a.x+a.y*a.y+a.z*a.z;
 }
 
 Vector VectorNorm(Vector a){
-	long double mag = VectorMag(a);
+	FPN mag = VectorMag(a);
 	Vector ret = {a.x/mag, a.y/mag, a.z/mag};
 	return ret;
 }

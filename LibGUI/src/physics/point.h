@@ -1,8 +1,10 @@
 Vector RotatePoint(Vector p, Vector o){
 	Vector ret;
-	ret.x = cosl(o.y)*(sinl(o.z)*p.y+cosl(o.z)*p.x)-sinl(o.y)*p.z;
-	ret.y = -(sinl(o.x)*(cosl(o.y)*p.z+sinl(o.y)*(sinl(o.z)*p.y+cosl(o.z)*p.x))+cosl(o.x)*(cosl(o.z)*p.y-sinl(o.z)*p.x));
-	ret.z = cosl(o.x)*(cosl(o.y)*p.z+sinl(o.y)*(sinl(o.z)*p.y+cosl(o.z)*p.x))-sinl(o.x)*(cosl(o.z)*p.y-sinl(o.z)*p.x);
+	
+	ret.x = COS(o.y)*(SIN(o.z)*p.y+COS(o.z)*p.x)-SIN(o.y)*p.z;
+	ret.y = -(SIN(o.x)*(COS(o.y)*p.z+SIN(o.y)*(SIN(o.z)*p.y+COS(o.z)*p.x))+COS(o.x)*(COS(o.z)*p.y-SIN(o.z)*p.x));
+	ret.z = COS(o.x)*(COS(o.y)*p.z+SIN(o.y)*(SIN(o.z)*p.y+COS(o.z)*p.x))-SIN(o.x)*(COS(o.z)*p.y-SIN(o.z)*p.x);
+
 	return ret;
 }
 
