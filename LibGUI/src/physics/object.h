@@ -4,10 +4,8 @@ typedef struct {
 	Vector v;
 	FPN r;
 	int c;
-	Vector pix;
-	int zbuf;
-} object;
+} Object;
 
 enum {
-	ObjectSphere = 0,
-} ObjectTypes;
+	ObjectSphere,
+};

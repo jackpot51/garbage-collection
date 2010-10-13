@@ -13,7 +13,10 @@ gcc -c ${lib}/libgui.c -o ${bin}/libgui.o || exit 1
 ar rcs ${bin}/libgui.a ${bin}/libgui.o || exit 2
 rm ${bin}/libgui.o
 
-flags="-L${bin} -lgui -lX11 -msse3 -I."
+flags="-L${bin} -I. -lgui -lX11 \
+-O3 \
+-ffast-math \
+"
 if [ $os == Darwin ]
 then
 #OSX does not have libX11 in the lib path

@@ -88,28 +88,28 @@ void clear(int color){
 	if(!_set) _setup();
 	XSetWindowBackground(_dpy, _win, color);
 	XClearWindow(_dpy, _win);
-    XFlush(_dpy);
+    //XFlush(_dpy);
 }
 
 void putpixel(int x, int y, int color){
 	if(!_set) _setup();
 	XSetForeground(_dpy, _gc, color);
 	XDrawPoint(_dpy, _win, _gc, x, y);
-	XFlush(_dpy);
+	//XFlush(_dpy);
 }
 
 void drawtext(int x, int y, char *text, int color){
 	if(!_set) _setup();
 	XSetForeground(_dpy, _gc, color);
 	XDrawString(_dpy, _win, _gc, x, y + 10, text, strlen(text));
-	XFlush(_dpy);
+	//XFlush(_dpy);
 }
 
 void drawline(int x, int y, int x2, int y2, int color){
 	if(!_set) _setup();
    	XSetForeground(_dpy, _gc, color);
     XDrawLine(_dpy, _win, _gc, x, y, x2, y2);
-    XFlush(_dpy);
+    //XFlush(_dpy);
 }
 
 void drawcircle(int x, int y, int radius, int color){
@@ -119,7 +119,7 @@ void drawcircle(int x, int y, int radius, int color){
 	y-=radius;
 	radius+=radius;
 	XDrawArc(_dpy, _win, _gc, x, y, radius, radius, 0, 360*65);
-    XFlush(_dpy);
+    //XFlush(_dpy);
 }
 
 void fillcircle(int x, int y, int radius, int color){
@@ -129,7 +129,7 @@ void fillcircle(int x, int y, int radius, int color){
 	y-=radius;
 	radius+=radius;
 	XFillArc(_dpy, _win, _gc, x, y, radius, radius, 0, 360*65);
-    XFlush(_dpy);
+    //XFlush(_dpy);
 }
 
 void drawrect(int x, int y, int x2, int y2, int color){
@@ -148,7 +148,7 @@ void drawrect(int x, int y, int x2, int y2, int color){
 	}
 	else h=y2-y;
 	XDrawRectangle(_dpy, _win, _gc, x, y, w, h);
-	XFlush(_dpy);
+	//XFlush(_dpy);
 }
 
 void fillrect(int x, int y, int x2, int y2, int color){
@@ -167,7 +167,7 @@ void fillrect(int x, int y, int x2, int y2, int color){
 	}
 	else h=y2-y;
 	XFillRectangle(_dpy, _win, _gc, x, y, w, h);
-	XFlush(_dpy);
+	//XFlush(_dpy);
 }
 
 void getinfo(screeninfo * sc){
@@ -175,6 +175,10 @@ void getinfo(screeninfo * sc){
 	sc->x=1024;
 	sc->y=768;
 	sc->color=_blackColor;
+}
+
+void update(){
+	XFlush(_dpy);
 }
 
 void reset(){

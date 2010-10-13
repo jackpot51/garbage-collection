@@ -9,22 +9,17 @@ typedef struct{
 	FPN jr;
 } Collision;
 
-//returns distance
-Collision ProcessCollision(object *a, object *b){
-	Vector p = VectorSub(b->p, a->p);
-	FPN d = VectorMag(p);
-	Vector n = VectorNorm(p);
+//returns collision data
+Collision ProcessCollision(Object *a, Object *b){
 	Collision ret;
-	ret.p = p;
-	ret.d = d;
-	ret.n = n;
-	if(d <= (a->r + b->r)){
+	ret.p = VectorSub(b->p, a->p);
+	ret.d = VectorMag(ret.p);
+	ret.n = VectorDiv(ret.p,ret.d);
+	if(ret.d <= (a->r + b->r)){
 		Vector vr = VectorSub(b->v, a->v);
-		FPN cor = 1; //elastic
-		FPN jr = -(1+cor)*VectorDot(vr, n)/(1/a->m+1/b->m);
-		ret.jr = jr;
-		a->v = VectorSub(a->v, VectorMul(VectorDiv(n, a->m), jr));
-		b->v = VectorAdd(b->v, VectorMul(VectorDiv(n, b->m), jr));
+		ret.jr = -2*VectorDot(vr, ret.n)/(1/a->m+1/b->m);
+		a->v = VectorAdd(a->v, VectorMul(ret.n, -ret.jr/a->m));
+		b->v = VectorAdd(b->v, VectorMul(ret.n, ret.jr/b->m));
 	}else{
 		ret.jr = 0;
 	}

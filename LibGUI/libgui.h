@@ -30,6 +30,8 @@ void fillrect(int x, int y, int x2, int y2, int color);
 
 void getinfo(screeninfo * sc);
 
+void update();
+
 void reset();
 
 double R(double max);
