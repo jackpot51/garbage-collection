@@ -16,15 +16,15 @@ void updatekeymap(){
 	}
     int i;
     for(i = 0; i < sizeof(keys); i++){
-	if(keys[i] & 0x40){
-	    keys[i] &= 0xBF;
-	    if(keys[i]==0) keys[i] = 1;
-	}
-	if(keys[i] & 0x80){
-	    keys[i] = 0;
-	}
+		if(keys[i] & 0x40){
+			keys[i] &= 0xBF;
+			if(keys[i]==0) keys[i] = 1;
+		}
+		if(keys[i] & 0x80){
+			keys[i] = 0;
+		}
     }
-    XFlush(_dpy);
+    //XFlush(_dpy);
 }
 
 char OSXKEY[128] = {	

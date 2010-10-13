@@ -34,7 +34,7 @@ Vector VectorCross(Vector a, Vector b){
 }
 
 FPN VectorMag(Vector a){
-	return SQRT(a.x*a.x+a.y*a.y+a.z*a.z);
+	return M(sqrt, a.x*a.x+a.y*a.y+a.z*a.z);
 }
 
 FPN VectorMag2(Vector a){
