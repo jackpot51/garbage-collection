@@ -93,6 +93,7 @@ public class Boat {
 						m == Material.BOOKSHELF ||
 						m == Material.CHEST ||
 						m == Material.WORKBENCH ||
+						m == Material.STEP ||
 						CheckBreakable(m)
 						);
 			}
@@ -182,6 +183,7 @@ public class Boat {
 					}
 					Block next = current.getRelative(movevec.getBlockX(), movevec.getBlockY(), movevec.getBlockZ());
 					if(!CheckFluid(next.getType()) && !CheckInBoat(GetVector(next.getLocation()))){
+						if(!collision) _captain.sendMessage("Colliding with " + next.getType().name() + ".");
 						collision = true;
 					}
 				}
