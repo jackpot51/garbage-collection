@@ -14,6 +14,7 @@ public class Boat {
 			Hashtable<Vector, BlockData> _allblocks;
 			Hashtable<Vector, BlockData> _blocks;
 			Hashtable<Vector, BlockData> _breakables;
+			int _movespeed;
 			Vector _offset;
 			double _theta;
 			Vector _angle;
@@ -28,6 +29,7 @@ public class Boat {
 				_offset = controlblock.getLocation().toVector();
 				_angle = angle;
 				_theta = 0;
+				_movespeed = 2;
 				_world = world;
 				_captain = captain;
 				_captain.sendMessage("[BoatMod] You are now the captain.");
@@ -38,6 +40,25 @@ public class Boat {
 			
 			public Player getCaptain(){
 				return _captain;
+			}
+			
+			public void changeSpeed(){
+				if(_movespeed < 16){
+					_movespeed *= 2;
+					_captain.sendMessage("[BoatMod] Moving " + _movespeed + " blocks per click.");
+				}else{
+					_movespeed = 1;
+					_captain.sendMessage("[BoatMod] Moving " + _movespeed + " block per click.");
+				}
+			}
+			
+			public void Move(Vector vec){
+				for(int i = 0; i < _movespeed; i++){ //it has to be done this way to keep water intact and properly collide
+					if(!MoveBlocks(vec)){
+						break;
+					}
+				}
+				
 			}
 			
 			private boolean CheckFluid(Material m){
@@ -147,7 +168,7 @@ public class Boat {
 				}
 			}
 			
-			public boolean MoveBlocks(Vector movevec){
+			private boolean MoveBlocks(Vector movevec){
 				boolean collision = false;
 				boolean damaged = false;
 				//check for changes and collisions, save new metadata
