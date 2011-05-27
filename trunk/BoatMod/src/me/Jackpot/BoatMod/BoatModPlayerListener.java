@@ -67,7 +67,7 @@ public class BoatModPlayerListener extends PlayerListener{
 				player.sendMessage("[BoatMod] Your boat has been deboated.");
 				player.sendMessage("[BoatMod] You have been demoted.");
 			}
-			if(event.getMaterial() == Material.COMPASS){
+			if(event.getMaterial() == Material.MAP){
 				Vector v = player.getLocation().getDirection();
 				if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK){
 					boat.Move(GetCompassDirection(v));
