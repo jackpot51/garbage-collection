@@ -9,16 +9,13 @@ import org.bukkit.inventory.ItemStack;
 public class BlockData{
 	Material _type;
 	byte _data;
-	boolean[] _neighbors;
 	Object _extra;
 	public BlockData(Block b){
-		_neighbors = new boolean[27];
 		updateData(b);
 	}
 	public BlockData(Material m, byte d){
 		_type = m;
 		_data = d;
-		_neighbors = new boolean[27];
 	}
 	public void clearBlock(Block b){
 		Material m = b.getType();
@@ -69,22 +66,5 @@ public class BlockData{
 	}
 	public void setExtra(Object extra){
 		_extra = extra;
-	}
-	public void addNeighbor(int x, int y, int z, Material m){
-		int i = (x+1)*9+(y+1)*3+(z+1);
-		if(i <= 27){
-			if(m == Material.WATER || m == Material.STATIONARY_WATER){
-				_neighbors[i] = true;
-			}
-		}
-	}
-	public boolean getNeighbor(int x, int y, int z){
-		int i = (x+1)*9+(y+1)*3+(z+1);
-		if(i <= 27){
-			return _neighbors[i];
-		}
-		else{
-			return false;
-		}
 	}
 }
