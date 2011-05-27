@@ -25,14 +25,14 @@ public class BoatModPlayerListener extends PlayerListener{
 		if(dir.getX() < -0.75){
 			vec.setX(-1);
 		}
-		/*
+
 		if(dir.getY() > 0.75){
 			vec.setY(1);
 		}
 		if(dir.getY() < -0.75){
 			vec.setY(-1);
 		}
-		*/
+
 		if(dir.getZ() > 0.75){
 			vec.setZ(1);
 		}
@@ -59,8 +59,7 @@ public class BoatModPlayerListener extends PlayerListener{
 			if(boat != null){
 				_boats.remove(player);
 			}
-			_boats.put(player, new Boat(event.getClickedBlock(), GetCompassDirection(player.getLocation().getDirection()),
-					event.getClickedBlock().getWorld(), player, plugin));
+			_boats.put(player, new Boat(event.getClickedBlock(), event.getClickedBlock().getWorld(), player, plugin));
 		}
 		if(boat != null){
 			if(event.getMaterial() == Material.BOAT && event.getAction() == Action.LEFT_CLICK_AIR){
@@ -70,10 +69,10 @@ public class BoatModPlayerListener extends PlayerListener{
 			}
 			if(event.getMaterial() == Material.COMPASS){
 				Vector v = player.getLocation().getDirection();
-				if(event.getAction() == Action.RIGHT_CLICK_AIR){
+				if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK){
 					boat.Move(GetCompassDirection(v));
 				}
-				else if(event.getAction() == Action.LEFT_CLICK_AIR){
+				else if(event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK){
 					boat.changeSpeed();
 				}
 			}
