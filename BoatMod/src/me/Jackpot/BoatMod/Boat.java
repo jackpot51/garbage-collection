@@ -162,6 +162,16 @@ public class Boat {
 				}
 			}
 			
+			private boolean CheckSurroundingWater(Vector vec){
+				Block b = GetBlock(vec);
+				return (b.getType() == Material.STATIONARY_WATER ||
+						b.getRelative(0, 0, 1).getType() == Material.STATIONARY_WATER ||
+						b.getRelative(0, 0, -1).getType() == Material.STATIONARY_WATER ||
+						b.getRelative(1, 0, 0).getType() == Material.STATIONARY_WATER ||
+						b.getRelative(-1, 0, 0).getType() == Material.STATIONARY_WATER
+						);
+			}
+			
 			private void FindAir(){
 				_air.clear();
 				int minx = 0;
@@ -196,8 +206,13 @@ public class Boat {
 						int startx = 0;
 						int lastx = 0;
 						boolean hitblock = false;
+						boolean hitwater = false;
 						for(int x = minx; x <= maxx; x++){
-							if(CheckInBoat(new Vector(x, y, z))){
+							Vector blockvec = new Vector(x, y, z);
+							if(CheckInBoat(blockvec)){
+								if(CheckSurroundingWater(blockvec)){
+									hitwater = true;
+								}
 								if(!hitblock){
 									hitblock = true;
 									startx = x;
@@ -208,8 +223,11 @@ public class Boat {
 								}
 							}
 						}
-						for(int x = startx+1; x < lastx; x++){
+						for(int x = startx; x <= lastx; x++){
 							Vector airvec = new Vector(x, y, z);
+							if(hitwater){
+								_removed.put(GetReal(airvec), new BlockData(Material.STATIONARY_WATER, (byte) 0));
+							}
 							if(!CheckInBoat(airvec)){
 								_air.add(airvec);
 							}
