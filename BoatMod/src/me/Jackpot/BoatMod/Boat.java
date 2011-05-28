@@ -85,7 +85,8 @@ public class Boat {
 						m == Material.CAKE_BLOCK ||
 						m == Material.SIGN ||
 						m == Material.SIGN_POST ||
-						m == Material.WALL_SIGN
+						m == Material.WALL_SIGN ||
+						m == Material.TRAP_DOOR
 						);
 			}
 
