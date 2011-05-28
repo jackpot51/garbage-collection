@@ -1,49 +1,52 @@
 package me.Jackpot.BoatMod;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 public class Boat {
-			Hashtable<Vector, BlockData> _allblocks;
+			ArrayList<Vector> _vectors;
 			Hashtable<Vector, BlockData> _blocks;
 			Hashtable<Vector, BlockData> _breakables;
 			Hashtable<Vector, BlockData> _removed;
 			ArrayList<Vector> _air;
-			int _movespeed;
+			int _size;
 			Vector _offset;
+			int _movespeed;
 			//double _theta;
 			//Vector _angle;
-			static World _world;
-			static Player _captain;
+			World _world;
+			Player _captain;
 			static BoatMod plugin;
 			
-			public Boat(Block controlblock, World world, Player captain, BoatMod instance){
+			public Boat(Block controlblock, Player captain, BoatMod instance){
 				_blocks = new Hashtable<Vector, BlockData>();
 				_breakables = new Hashtable<Vector, BlockData>();
 				_removed = new Hashtable<Vector, BlockData>();
 				_air = new ArrayList<Vector>();
+				_size = 0;
 				_offset = controlblock.getLocation().toVector();
-				//_angle = angle;
-				//_theta = 0;
 				_movespeed = 1;
-				_world = world;
+				_world = controlblock.getWorld();
 				_captain = captain;
-				_captain.sendMessage("[BoatMod] You are now the captain.");
 				plugin = instance;
+				plugin.Message(_captain, "You are now the captain.");
 				FindBlocks(controlblock);
-				_allblocks = new Hashtable<Vector, BlockData>();
-				_allblocks.putAll(_breakables);
-				_allblocks.putAll(_blocks);
+				_vectors = new ArrayList<Vector>(_breakables.keySet());
+				_vectors.addAll(_blocks.keySet());
 				FindAir();
-				_captain.sendMessage("[BoatMod] You now have control of " + (_blocks.size() + _breakables.size()) + " blocks.");
+				plugin.Message(_captain, "You now have control of " + (_vectors.size()) + " blocks.");
 			}
 			
 			public Player getCaptain(){
@@ -53,10 +56,10 @@ public class Boat {
 			public void changeSpeed(){
 				if(_movespeed < 16){
 					_movespeed *= 2;
-					_captain.sendMessage("[BoatMod] Moving " + _movespeed + " blocks per click.");
+					plugin.Message(_captain, "Moving " + _movespeed + " blocks per click.");
 				}else{
 					_movespeed = 1;
-					_captain.sendMessage("[BoatMod] Moving " + _movespeed + " block per click.");
+					plugin.Message(_captain, "Moving " + _movespeed + " block per click.");
 				}
 			}
 			
@@ -111,22 +114,11 @@ public class Boat {
 			private Vector GetVector(Location l){
 				Vector vec = l.toVector();
 				vec.subtract(_offset);
-				return vec; //RotateVector(vec, -_theta);
+				return vec;
 			}
 			
-			//private double GetAngle(Vector dir){
-			//	return Math.atan((dir.getZ()-_angle.getZ())/(dir.getX()-_angle.getX()));
-			//}
-			
-			//private Vector RotateVector(Vector vec, double theta){
-			//	Vector rot = vec.clone();
-			//	rot.setX(vec.getX()*Math.cos(theta)-vec.getZ()*Math.sin(theta));
-			//	rot.setZ(-vec.getX()*Math.sin(theta)-vec.getZ()*Math.cos(theta));
-			//	return rot;
-			//}
-			
 			private Vector GetReal(Vector vec){
-				Vector real = vec.clone();//RotateVector(vec, _theta);
+				Vector real = vec.clone();
 				real.add(_offset);
 				return real;
 			}
@@ -148,14 +140,19 @@ public class Boat {
 						}else{
 							_blocks.put(vec, bd);
 						}
-						for(int x = -1; x <= 1; x++){
-							for(int y = -1; y <= 1; y++){
-								for(int z = -1; z <= 1; z++){
-									if(x != 0 || y != 0 || z != 0){
-										FindBlocks(b.getRelative(x, y, z));
+						_size++;
+						if(_size < plugin.MaxBoatSize(_captain)){
+							for(int x = -1; x <= 1; x++){
+								for(int y = -1; y <= 1; y++){
+									for(int z = -1; z <= 1; z++){
+										if(x != 0 || y != 0 || z != 0){
+											FindBlocks(b.getRelative(x, y, z));
+										}
 									}
 								}
 							}
+						}else{
+							plugin.Message(_captain, "Maximum size hit.");
 						}
 					}else{
 						_removed.put(GetReal(vec), bd);
@@ -185,8 +182,8 @@ public class Boat {
 				int maxy = 0;
 				int minz = 0;
 				int maxz = 0;
-				for(Enumeration<Vector> vectors = _allblocks.keys(); vectors.hasMoreElements();){
-					Vector vec = vectors.nextElement();
+				for(Iterator<Vector> vectors = _vectors.iterator(); vectors.hasNext();){
+					Vector vec = vectors.next();
 					int blockx = vec.getBlockX();
 					int blocky = vec.getBlockY();
 					int blockz = vec.getBlockZ();
@@ -272,8 +269,8 @@ public class Boat {
 				int y = movevec.getBlockY();
 				int z = movevec.getBlockZ();
 				//check for changes and collisions, save new metadata
-				for(Enumeration<Vector> vectors = _allblocks.keys(); vectors.hasMoreElements();){
-					Vector vec = vectors.nextElement();
+				for(Iterator<Vector> vectors = _vectors.iterator(); vectors.hasNext();){
+					Vector vec = vectors.next();
 					Block current = GetBlock(vec);
 					if(current.getType() != GetSavedData(vec).getType()){
 						damaged = true;
@@ -286,16 +283,16 @@ public class Boat {
 					}
 				}
 				if(collision){
-					_captain.sendMessage("[BoatMod] Collision detected, not moving!");
+					plugin.Message(_captain, "Collision detected, not moving!");
 				}
 				if(damaged){
-					_captain.sendMessage("[BoatMod] Boat blocks have changed!");
+					plugin.Message(_captain, "Boat blocks have changed!");
 				}
 				if(!collision && !damaged){
 					//clear old starting with breakables, replace removed blocks
-					for(Enumeration<Vector> vectors = _allblocks.keys(); vectors.hasMoreElements();){
-						Vector vec = vectors.nextElement();
-						_allblocks.get(vec).clearBlock(GetBlock(vec));
+					for(Iterator<Vector> vectors = _vectors.iterator(); vectors.hasNext();){
+						Vector vec = vectors.next();
+						GetSavedData(vec).clearBlock(GetBlock(vec));
 						if(!CheckAir(vec, movevec) && _removed.containsKey(GetReal(vec))){
 							SetBlock(vec, _removed.get(GetReal(vec)));
 							_removed.remove(GetReal(vec));
@@ -303,16 +300,15 @@ public class Boat {
 							SetBlock(vec, new BlockData(Material.AIR,(byte) 0));
 						}
 					}
-					//teleport players
-					Player players[] = plugin.getServer().getOnlinePlayers();
-					for(int i = 0; i < players.length; i++){
-						Location playerloc = players[i].getLocation();
-						playerloc.setY(playerloc.getY() - 1);
-						if(_blocks.containsKey(GetVector(playerloc.getBlock().getLocation()))){
-							playerloc.setX(playerloc.getX() + movevec.getBlockX());
-							playerloc.setY(playerloc.getY() + 1 + movevec.getBlockY());
-							playerloc.setZ(playerloc.getZ() + movevec.getBlockZ());
-							players[i].teleport(playerloc);
+					//teleport entities
+					List<Entity> entities = _world.getEntities();
+					for(int i = 0; i < entities.size(); i++){
+						Location entityloc = entities.get(i).getLocation().clone();
+						if(_blocks.containsKey(GetVector(entityloc.getBlock().getFace(BlockFace.DOWN).getLocation()))){
+							entityloc.setX(entityloc.getX() + movevec.getBlockX());
+							entityloc.setY(entityloc.getY() + movevec.getBlockY());
+							entityloc.setZ(entityloc.getZ() + movevec.getBlockZ());
+							entities.get(i).teleport(entityloc);
 						}
 					}
 					_offset.add(movevec);
