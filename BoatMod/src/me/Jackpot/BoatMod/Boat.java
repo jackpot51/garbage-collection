@@ -165,11 +165,15 @@ public class Boat {
 			
 			private boolean CheckSurroundingWater(Vector vec){
 				Block b = GetBlock(vec);
-				return (b.getType() == Material.STATIONARY_WATER ||
+				return (
 						b.getRelative(0, 0, 1).getType() == Material.STATIONARY_WATER ||
+						b.getRelative(0, 0, 1).getType() == Material.WATER ||
 						b.getRelative(0, 0, -1).getType() == Material.STATIONARY_WATER ||
+						b.getRelative(0, 0, -1).getType() == Material.WATER ||
 						b.getRelative(1, 0, 0).getType() == Material.STATIONARY_WATER ||
-						b.getRelative(-1, 0, 0).getType() == Material.STATIONARY_WATER
+						b.getRelative(1, 0, 0).getType() == Material.WATER ||
+						b.getRelative(-1, 0, 0).getType() == Material.STATIONARY_WATER ||
+						b.getRelative(-1, 0, 0).getType() == Material.WATER
 						);
 			}
 			
