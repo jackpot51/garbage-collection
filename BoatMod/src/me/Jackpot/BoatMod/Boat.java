@@ -56,8 +56,8 @@ public class Boat {
 			}
 			
 			public void changeSpeed(){
-				if(_movespeed < 16){
-					_movespeed *= 2;
+				if(_movespeed < plugin.MaxBoatSpeed(_captain)){
+					_movespeed++;
 					plugin.Message(_captain, "Moving " + _movespeed + " blocks per click.");
 				}else{
 					_movespeed = 1;
