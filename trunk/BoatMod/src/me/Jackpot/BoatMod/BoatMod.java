@@ -76,6 +76,10 @@ public class BoatMod extends JavaPlugin {
 		}
 	}
 	
+	public int MaxBoatSpeed(Player player){
+		return 4;
+	}
+	
 	public void AddBoat(Player player, Block block){
 		Boat boat = getBoat(player);
 		if(boat != null){
