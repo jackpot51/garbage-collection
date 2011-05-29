@@ -42,7 +42,9 @@ public class Boat {
 				_captain = captain;
 				plugin = instance;
 				plugin.Message(_captain, "You are now the captain.");
-				FindBlocks(controlblock);
+				if(!FindBlocks(controlblock)){
+					plugin.Message(_captain, "Warning! You hit the boat size limit!");
+				}
 				_vectors = new ArrayList<Vector>(_breakables.keySet());
 				_vectors.addAll(_blocks.keySet());
 				FindAir();
@@ -130,34 +132,38 @@ public class Boat {
 						);
 			}
 			
-			private void FindBlocks(Block b){
+			private boolean FindBlocks(Block b){
+				boolean success = true;
 				Vector vec = GetVector(b.getLocation());
 				if(!CheckInBoat(vec) && !_removed.containsKey(GetReal(vec))){
 					BlockData bd = new BlockData(b);
 					if(CheckBoatable(b.getType())){
-						if(CheckBreakable(b.getType())){
-							_breakables.put(vec, bd);
-						}else{
-							_blocks.put(vec, bd);
-						}
-						_size++;
 						if(_size < plugin.MaxBoatSize(_captain)){
+							if(CheckBreakable(b.getType())){
+								_breakables.put(vec, bd);
+							}else{
+								_blocks.put(vec, bd);
+							}
+							_size++;
 							for(int x = -1; x <= 1; x++){
 								for(int y = -1; y <= 1; y++){
 									for(int z = -1; z <= 1; z++){
 										if(x != 0 || y != 0 || z != 0){
-											FindBlocks(b.getRelative(x, y, z));
+											if(!FindBlocks(b.getRelative(x, y, z))){
+												success = false;
+											}
 										}
 									}
 								}
 							}
 						}else{
-							plugin.Message(_captain, "Maximum size hit.");
+							success=false;
 						}
 					}else{
 						_removed.put(GetReal(vec), bd);
 					}
 				}
+				return success;
 			}
 			
 			private boolean CheckSurroundingWater(Vector vec){
