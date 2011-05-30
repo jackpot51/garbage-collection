@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
 public class BoatMod extends JavaPlugin {
@@ -18,11 +19,11 @@ public class BoatMod extends JavaPlugin {
 	public void onEnable(){
 		PluginManager pm = this.getServer().getPluginManager();
 		_boats = new Hashtable<Player, Boat>();
-		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.High, this);
+		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Highest, this);
 		pm.registerEvent(Event.Type.PLAYER_KICK, playerListener, Event.Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Event.Priority.Normal, this);
-		log.info("BoatMod has been enabled.");
+		log.info("BoatMod v0.2 has been enabled.");
 	}
 	public void onDisable(){
 		for(Enumeration<Player> players = _boats.keys(); players.hasMoreElements();){
@@ -43,8 +44,8 @@ public class BoatMod extends JavaPlugin {
 		}
 	}
 	
-	private Vector GetCompassDirection(Vector dir){
-		Vector vec = new Vector(0,0,0);
+	private BlockVector GetCompassDirection(Vector dir){
+		BlockVector vec = new BlockVector(0,0,0);
 		if(dir.getX() > 0.75){
 			vec.setX(1);
 		}
