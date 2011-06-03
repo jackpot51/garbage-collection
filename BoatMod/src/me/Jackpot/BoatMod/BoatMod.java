@@ -103,12 +103,16 @@ public class BoatMod extends JavaPlugin {
 	
 	public void MoveBoat(Player player){
 		Boat boat = getBoat(player);
-		Vector v = player.getLocation().getDirection();
-		boat.Move(GetCompassDirection(v));
+		if(boat != null){
+			Vector v = player.getLocation().getDirection();
+			boat.Move(GetCompassDirection(v));
+		}
 	}
 	
 	public void ChangeSpeed(Player player){
 		Boat boat = getBoat(player);
-		boat.changeSpeed();
+		if(boat != null){
+			boat.changeSpeed();
+		}
 	}
 }

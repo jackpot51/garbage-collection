@@ -67,11 +67,13 @@ public class Boat {
 			}
 			
 			public void Move(BlockVector vec){
-				for(int i = 0; i < _movespeed; i++){ //it has to be done this way to keep water intact and properly collide
-					if(!MoveBlocks(vec)){
-						break;
-					}
-				}
+				//for(int i = 0; i < _movespeed; i++){ //it has to be done this way to keep water intact and properly collide
+					//if(!
+					MoveBlocks(vec.multiply(_movespeed).toBlockVector());
+					//){
+					//	break;
+					//}
+				//}
 				
 			}
 			
