@@ -19,37 +19,55 @@ import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.nijiko.permissions.PermissionHandler;
+import com.nijikokun.bukkit.Permissions.Permissions;
+import org.bukkit.plugin.Plugin;
+
 public class BoatMod extends JavaPlugin {
-	Hashtable<String, String> config;
+	String name;
+	Hashtable<String, Hashtable<String,String>> config;
 	ArrayList<Material> boatable;
 	Hashtable<String,String> scripts;
 	Hashtable<Player, String> scriptselect;
-	private final BoatModPlayerListener playerListener = new BoatModPlayerListener(this);
 	Hashtable<Player, Boat> boats;
 	Hashtable<Player, Thread> scriptboats;
 	Logger log = Logger.getLogger("Minecraft");
-	String name;
+	private final BoatModPlayerListener playerListener = new BoatModPlayerListener(this);
+	public static PermissionHandler permissionHandler;
 	
 	public void LogMessage(String msg){
 		log.info("[" + name + "] " + msg);
 	}
 	
 	public void onEnable(){
-		PluginManager pm = this.getServer().getPluginManager();
 		name = getDescription().getName();
-		config = new Hashtable<String, String>();
+		config = new Hashtable<String, Hashtable<String,String>>();
 		boatable = new ArrayList<Material>();
 		scripts = new Hashtable<String,String>();
 		scriptselect = new Hashtable<Player, String>();
 		boats = new Hashtable<Player, Boat>();
 		scriptboats = new Hashtable<Player, Thread>();
 		ReadFile(new File("plugins/" + name));
+		setupPermissions();
+		PluginManager pm = this.getServer().getPluginManager();
 		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Highest, this);
 		pm.registerEvent(Event.Type.PLAYER_KICK, playerListener, Event.Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
 		pm.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Event.Priority.Normal, this);
 		LogMessage("Version " + this.getDescription().getVersion() + " has been enabled.");
 	}
+	
+	public void setupPermissions(){
+		Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
+		if(permissionHandler == null){
+			if(permissionsPlugin != null){
+				permissionHandler = ((Permissions) permissionsPlugin).getHandler();
+			}else{
+				LogMessage("Permissions plugin not detected.");
+			}
+		}
+	}
+	
 	public void onDisable(){
 		for(Enumeration<Player> players = boats.keys(); players.hasMoreElements();){
 			RemoveBoat(players.nextElement());
@@ -110,11 +128,18 @@ public class BoatMod extends JavaPlugin {
 							}
 							switch(dt){
 								case CONFIG:
-									int seperator = line.indexOf("=", 0);
-									if(seperator >0){
-										String configname = line.substring(0, seperator);
-										String configvalue = line.substring(seperator+1);
-										config.put(configname, configvalue);
+									if(line.indexOf("=") > 0){
+										String configgroup = "";
+										if(line.indexOf(":") > 0){ 
+											configgroup = line.substring(0, line.indexOf(":"));
+											line = line.substring(line.indexOf(":")+1);
+										}
+										String configname = line.substring(0, line.indexOf("=", 0));
+										String configvalue = line.substring(line.indexOf("=", 0)+1);
+										if(!config.containsKey(configgroup)){
+											config.put(configgroup, new Hashtable<String, String>());
+										}
+										config.get(configgroup).put(configname, configvalue);
 									}else{
 										LogMessage("Config data error: " + line);
 									}
@@ -156,18 +181,25 @@ public class BoatMod extends JavaPlugin {
 		}
 	}
 	
-	public int MaxBoatSize(Player player){
-		int maxsize;
-		if(player.isOp()){
-			maxsize = Integer.parseInt(config.get("MaxSizeOp"));
-		}else{
-			maxsize = Integer.parseInt(config.get("MaxSizePlayer"));
+	public String GetConfig(Player player, String configname){
+		String configvalue = config.get("").get(configname);
+		if(permissionHandler != null){
+			for(Enumeration<String> configgroups = config.keys(); configgroups.hasMoreElements();){
+				String configgroup = configgroups.nextElement();
+				if(configgroup != "" && permissionHandler.permission(player, configgroup)){
+					configvalue = config.get(configgroup).get(configname);
+				}
+			}
 		}
-		return maxsize;
+		return configvalue;
+	}
+	
+	public int MaxBoatSize(Player player){
+		return Integer.parseInt(GetConfig(player, "MaxSize"));
 	}
 	
 	public int MaxBoatSpeed(Player player){
-		return Integer.parseInt(config.get("MaxSpeed"));
+		return Integer.parseInt(GetConfig(player, "MaxSpeed"));
 	}
 	
 	public boolean CheckBoatable(Material m){

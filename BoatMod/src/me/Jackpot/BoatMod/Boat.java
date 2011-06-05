@@ -26,6 +26,7 @@ public class Boat {
 			int _size;
 			BlockVector _offset;
 			int _movespeed;
+			int _maxsize;
 			//double _theta;
 			//Vector _angle;
 			World _world;
@@ -43,6 +44,7 @@ public class Boat {
 				_world = controlblock.getWorld();
 				_captain = captain;
 				plugin = instance;
+				_maxsize = plugin.MaxBoatSize(captain);
 				if(!FindBlocks(controlblock)){
 					Message("Warning! You hit the boat size limit!");
 				}
@@ -166,7 +168,7 @@ public class Boat {
 				if(!CheckInBoatInit(vec) && !_removed.containsKey(GetReal(vec))){
 					BlockData bd = new BlockData(b);
 					if(CheckBoatable(b.getType())){
-						if(_size < plugin.MaxBoatSize(_captain)){
+						if(_size < _maxsize){
 							if(CheckBreakable(b.getType())){
 								_breakables.put(vec, bd);
 							}else{
