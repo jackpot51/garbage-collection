@@ -15,6 +15,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.BlockVector;
+import org.bukkit.util.Vector;
 
 public class Boat {
 			ArrayList<BlockVector> _vectors;
@@ -42,39 +43,73 @@ public class Boat {
 				_world = controlblock.getWorld();
 				_captain = captain;
 				plugin = instance;
-				plugin.Message(_captain, "You are now the captain.");
 				if(!FindBlocks(controlblock)){
-					plugin.Message(_captain, "Warning! You hit the boat size limit!");
+					Message("Warning! You hit the boat size limit!");
 				}
 				_vectors = new ArrayList<BlockVector>(_breakables.keySet());
 				_vectors.addAll(_blocks.keySet());
 				FindAir();
-				plugin.Message(_captain, "You now have control of " + (_vectors.size()) + " blocks.");
 			}
 			
 			public Player getCaptain(){
 				return _captain;
 			}
 			
+			public void Message(String msg){
+				plugin.Message(_captain, msg);
+			}
+			
 			public void changeSpeed(){
 				if(_movespeed < plugin.MaxBoatSpeed(_captain)){
 					_movespeed++;
-					plugin.Message(_captain, "Moving " + _movespeed + " blocks per click.");
+					Message("Moving " + _movespeed + " blocks per click.");
 				}else{
 					_movespeed = 1;
-					plugin.Message(_captain, "Moving " + _movespeed + " block per click.");
+					Message("Moving " + _movespeed + " block per click.");
 				}
 			}
 			
-			public void Move(BlockVector vec){
-				//for(int i = 0; i < _movespeed; i++){ //it has to be done this way to keep water intact and properly collide
-					//if(!
-					MoveBlocks(vec.multiply(_movespeed).toBlockVector());
-					//){
-					//	break;
-					//}
-				//}
-				
+			public void setSpeed(int movespeed){
+				_movespeed = movespeed;
+			}
+			
+			public boolean Move(Vector dir){
+				BlockVector vec = GetCompassDirection(dir);
+				if(vec.length() == 1){
+					for(int i = 0; i < _movespeed; i++){ //it has to be done this way to keep water intact and properly collide
+						if(!MoveBlocks(vec)){
+							return false;
+						}
+					}
+					return true;
+				}else{
+					return false;
+				}
+			}
+			
+			private BlockVector GetCompassDirection(Vector dir){
+				BlockVector vec = new BlockVector(0,0,0);
+				if(dir.getX() > 0.75){
+					vec.setX(1);
+				}
+				if(dir.getX() < -0.75){
+					vec.setX(-1);
+				}
+
+				if(dir.getY() > 0.75){
+					vec.setY(1);
+				}
+				if(dir.getY() < -0.75){
+					vec.setY(-1);
+				}
+
+				if(dir.getZ() > 0.75){
+					vec.setZ(1);
+				}
+				if(dir.getZ() < -0.75){
+					vec.setZ(-1);
+				}
+				return vec;
 			}
 			
 			private boolean CheckFluid(Material m){
@@ -99,21 +134,7 @@ public class Boat {
 			}
 
 			private boolean CheckBoatable(Material m){
-				return (
-						m == Material.FENCE ||
-						m == Material.WOOD ||
-						m == Material.WOOL ||
-						m == Material.LOG ||
-						m == Material.WOOD_STAIRS ||
-						m == Material.GLASS ||
-						m == Material.BED_BLOCK ||
-						m == Material.BOOKSHELF ||
-						m == Material.CHEST ||
-						m == Material.WORKBENCH ||
-						m == Material.STEP ||
-						m == Material.GLOWSTONE ||
-						CheckBreakable(m)
-						);
+				return plugin.CheckBoatable(m);
 			}
 			
 			private BlockVector GetVector(Location l){
@@ -176,6 +197,8 @@ public class Boat {
 			private boolean CheckSurroundingWater(BlockVector vec){
 				Block b = GetBlock(vec);
 				return (
+						b.getRelative(0, 0, 0).getType() == Material.STATIONARY_WATER ||
+						b.getRelative(0, 0, 0).getType() == Material.WATER ||
 						b.getRelative(0, 0, 1).getType() == Material.STATIONARY_WATER ||
 						b.getRelative(0, 0, 1).getType() == Material.WATER ||
 						b.getRelative(0, 0, -1).getType() == Material.STATIONARY_WATER ||
@@ -300,10 +323,10 @@ public class Boat {
 					}
 				}
 				if(collision){
-					plugin.Message(_captain, "Collision detected, not moving!");
+					Message("Collision detected, not moving!");
 				}
 				if(damaged){
-					plugin.Message(_captain, "Boat blocks have changed!");
+					Message("Boat blocks have changed!");
 				}
 				if(!collision && !damaged){
 					//clear old starting with breakables, replace removed blocks
