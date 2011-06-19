@@ -1,15 +1,19 @@
 package me.Jackpot.BoatMod;
 
+import java.util.ArrayList;
+
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.ContainerBlock;
+import org.bukkit.block.Furnace;
+import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
 
 public class BlockData{
 	Material _type;
 	byte _data;
-	Object _extra;
+	ArrayList<Object> _extra = new ArrayList<Object>();
 	public BlockData(Block b){
 		updateData(b);
 	}
@@ -25,30 +29,55 @@ public class BlockData{
 	}
 	public void setBlock(Block b){
 		Material m = _type;
-		b.setTypeIdAndData(m.getId(), _data, false);
+		b.setTypeIdAndData(m.getId(), _data, true);
+		int extrai = 0;
 		if(b.getState() instanceof Sign){
 			Sign sign = (Sign)b.getState();
-			String lines[] = (String[]) _extra;
+			String lines[] = (String[]) _extra.get(extrai);
+			extrai++;
 			for(int i = 0; i < lines.length; i++){
 				sign.setLine(i, lines[i]);
 			}
 		}
-		else if(b.getState() instanceof ContainerBlock){
+		if(b.getState() instanceof ContainerBlock){
 			ContainerBlock container = (ContainerBlock)b.getState();
-			container.getInventory().setContents((ItemStack[])_extra);
+			container.getInventory().setContents((ItemStack[])_extra.get(extrai));
+			extrai++;
+		}
+		if(b.getState() instanceof Furnace){
+			Furnace furnace = (Furnace)b.getState();
+			furnace.setBurnTime((Short)_extra.get(extrai));
+			extrai++;
+			furnace.setCookTime((Short)_extra.get(extrai));
+			extrai++;
+		}
+		if(b.getState() instanceof NoteBlock){
+			NoteBlock noteblock = (NoteBlock)b.getState();
+			noteblock.setNote((Byte)_extra.get(extrai));
+			extrai++;
 		}
 	}
 	public void updateData(Block b){
 		Material m = b.getType();
 		_type = m;
 		_data = b.getData();
+		_extra.clear();
 		if(b.getState() instanceof Sign){
 			Sign sign = (Sign)b.getState();
-			_extra = sign.getLines();
+			_extra.add(sign.getLines());
 		}
-		else if(b.getState() instanceof ContainerBlock){
+		if(b.getState() instanceof ContainerBlock){
 			ContainerBlock container = (ContainerBlock)b.getState();
-			_extra = container.getInventory().getContents();
+			_extra.add(container.getInventory().getContents());
+		}
+		if(b.getState() instanceof Furnace){
+			Furnace furnace = (Furnace)b.getState();
+			_extra.add((Short)furnace.getBurnTime());
+			_extra.add((Short)furnace.getCookTime());
+		}
+		if(b.getState() instanceof NoteBlock){
+			NoteBlock noteblock = (NoteBlock)b.getState();
+			_extra.add((Byte)noteblock.getNote());
 		}
 	}
 	public Material getType(){
@@ -62,8 +91,5 @@ public class BlockData{
 	}
 	public Object getExtra(){
 		return _extra;
-	}
-	public void setExtra(Object extra){
-		_extra = extra;
 	}
 }

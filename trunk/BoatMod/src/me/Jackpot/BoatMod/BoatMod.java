@@ -27,8 +27,8 @@ public class BoatMod extends JavaPlugin {
 	String name;
 	Hashtable<String, Hashtable<String,String>> config;
 	ArrayList<Material> boatable;
-	Hashtable<String,String> scripts;
-	Hashtable<Player, String> scriptselect;
+	Hashtable<String, Script> scripts;
+	Hashtable<Player, Script> scriptselect;
 	Hashtable<Player, Boat> boats;
 	Hashtable<Player, Thread> scriptboats;
 	Logger log = Logger.getLogger("Minecraft");
@@ -41,10 +41,10 @@ public class BoatMod extends JavaPlugin {
 	
 	public void onEnable(){
 		name = getDescription().getName();
-		config = new Hashtable<String, Hashtable<String,String>>();
+		config = new Hashtable<String, Hashtable<String, String>>();
 		boatable = new ArrayList<Material>();
-		scripts = new Hashtable<String,String>();
-		scriptselect = new Hashtable<Player, String>();
+		scripts = new Hashtable<String, Script>();
+		scriptselect = new Hashtable<Player, Script>();
 		boats = new Hashtable<Player, Boat>();
 		scriptboats = new Hashtable<Player, Thread>();
 		ReadFile(new File("plugins/" + name));
@@ -79,11 +79,12 @@ public class BoatMod extends JavaPlugin {
 		if(cmd.getName().equalsIgnoreCase("boatmod")){
 			if(args.length == 1 && scripts.containsKey(args[0])){
 				if(sender instanceof Player){
-					if(sender.isOp()){
-						scriptselect.put((Player)sender, args[0]);
+					Script script = scripts.get(args[0]);
+					if(permissionHandler != null && (script.isValid() || permissionHandler.permission((Player)sender, script._permission))){
+						scriptselect.put((Player)sender, script);
 						Message((Player)sender, "Click a boat to apply the " + args[0] + " script to it.");
 					}else{
-						Message((Player)sender, "You do not have access to the boatmod command.");
+						Message((Player)sender, "You do not have access to the " + args[0] + " script.");
 					}
 					
 				}else{
@@ -98,6 +99,7 @@ public class BoatMod extends JavaPlugin {
 	enum DataType{
 		UNKNOWN,
 		CONFIG,
+		SCRIPT,
 		MATERIAL
 	}
 	
@@ -114,8 +116,13 @@ public class BoatMod extends JavaPlugin {
 					if(name.endsWith(".js")){
 						String scriptname = name.substring(0, name.indexOf(".js"));
 						LogMessage("Script: " + scriptname + " @ " + file.getPath());
-						scripts.put(scriptname, file.getPath());
-					}else{
+						if(scripts.containsKey(scriptname)){
+							scripts.get(scriptname)._file = file.getPath();
+						}else{
+							scripts.put(scriptname, new Script("", file.getPath()));
+						}
+					}
+					else if(name.endsWith(".cfg")){
 						LogMessage("Data file: " + file.getPath());
 						BufferedReader br = new BufferedReader(new FileReader(file));
 						DataType dt = DataType.UNKNOWN;
@@ -124,7 +131,8 @@ public class BoatMod extends JavaPlugin {
 							if(line.startsWith("[") && line.endsWith("]")){
 								line = line.replace("[", "");
 								line = line.replace("]", "");
-								dt = DataType.UNKNOWN;
+								dt = DataType.valueOf(line.toUpperCase());
+								continue;
 							}
 							switch(dt){
 								case CONFIG:
@@ -151,10 +159,15 @@ public class BoatMod extends JavaPlugin {
 										LogMessage("Material data error: " + line);
 									}
 									break;
-								case UNKNOWN:
-									if(DataType.valueOf(line.toUpperCase()) != null){
-										dt = DataType.valueOf(line.toUpperCase());
+								case SCRIPT:
+									String scriptname = line.substring(line.indexOf(":")+1);
+									String permission = line.substring(0,line.indexOf(":"));
+									if(scripts.containsKey(scriptname)){
+										scripts.get(scriptname)._permission = permission;
+									}else{
+										scripts.put(scriptname, new Script(permission, ""));
 									}
+									LogMessage("Got permission " + permission + " for script " + scriptname);
 									break;
 							}
 						}

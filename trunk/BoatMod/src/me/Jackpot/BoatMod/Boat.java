@@ -6,7 +6,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -31,7 +30,7 @@ public class Boat {
 			//Vector _angle;
 			World _world;
 			Player _captain;
-			static BoatMod plugin;
+			BoatMod plugin;
 			
 			public Boat(Block controlblock, Player captain, BoatMod instance){
 				_blocks = new Hashtable<BlockVector, BlockData>();
@@ -118,7 +117,9 @@ public class Boat {
 				return (
 						m == Material.AIR ||
 						m == Material.WATER ||
-						m == Material.STATIONARY_WATER
+						m == Material.STATIONARY_WATER ||
+						m == Material.LAVA ||
+						m == Material.STATIONARY_LAVA
 						);
 			}
 			
@@ -131,7 +132,11 @@ public class Boat {
 						m == Material.SIGN ||
 						m == Material.SIGN_POST ||
 						m == Material.WALL_SIGN ||
-						m == Material.TRAP_DOOR
+						m == Material.TRAP_DOOR ||
+						m == Material.REDSTONE_WIRE ||
+						m == Material.REDSTONE_TORCH_OFF ||
+						m == Material.REDSTONE_TORCH_ON ||
+						m == Material.STONE_BUTTON
 						);
 			}
 
@@ -196,19 +201,14 @@ public class Boat {
 				return success;
 			}
 			
-			private boolean CheckSurroundingWater(BlockVector vec){
+			private boolean CheckSurrounding(Material m, BlockVector vec){
 				Block b = GetBlock(vec);
 				return (
-						b.getRelative(0, 0, 0).getType() == Material.STATIONARY_WATER ||
-						b.getRelative(0, 0, 0).getType() == Material.WATER ||
-						b.getRelative(0, 0, 1).getType() == Material.STATIONARY_WATER ||
-						b.getRelative(0, 0, 1).getType() == Material.WATER ||
-						b.getRelative(0, 0, -1).getType() == Material.STATIONARY_WATER ||
-						b.getRelative(0, 0, -1).getType() == Material.WATER ||
-						b.getRelative(1, 0, 0).getType() == Material.STATIONARY_WATER ||
-						b.getRelative(1, 0, 0).getType() == Material.WATER ||
-						b.getRelative(-1, 0, 0).getType() == Material.STATIONARY_WATER ||
-						b.getRelative(-1, 0, 0).getType() == Material.WATER
+						b.getRelative(0, 0, 0).getType() == m ||
+						b.getRelative(0, 0, 1).getType() == m ||
+						b.getRelative(0, 0, -1).getType() == m ||
+						b.getRelative(1, 0, 0).getType() == m ||
+						b.getRelative(-1, 0, 0).getType() == m
 						);
 			}
 			
@@ -246,27 +246,32 @@ public class Boat {
 						int startx = 0;
 						int lastx = 0;
 						boolean hitblock = false;
-						boolean hitwater = false;
+						Material hitfluid = null;
 						for(int x = minx; x <= maxx; x++){
 							BlockVector blockvec = new BlockVector(x, y, z);
 							if(CheckInBoat(blockvec)){
-								if(CheckSurroundingWater(blockvec)){
-									hitwater = true;
+								if(hitfluid == null){
+									if(CheckSurrounding(Material.WATER, blockvec)){
+										hitfluid = Material.WATER;
+									}else if(CheckSurrounding(Material.STATIONARY_WATER, blockvec)){
+										hitfluid = Material.STATIONARY_WATER;
+									}else if(CheckSurrounding(Material.LAVA, blockvec)){
+										hitfluid = Material.LAVA;
+									}else if(CheckSurrounding(Material.STATIONARY_LAVA, blockvec)){
+										hitfluid = Material.STATIONARY_LAVA;
+									}
 								}
 								if(!hitblock){
 									hitblock = true;
 									startx = x;
-									lastx = x;
 								}
-								if(hitblock){
-									lastx = x;
-								}
+								lastx = x;
 							}
 						}
 						for(int x = startx; x <= lastx; x++){
 							BlockVector airvec = new BlockVector(x, y, z);
-							if(hitwater){
-								_removed.put(GetReal(airvec), new BlockData(Material.STATIONARY_WATER, (byte) 0));
+							if(hitfluid != null){
+								_removed.put(GetReal(airvec), new BlockData(hitfluid, (byte) 0));
 							}
 							if(!CheckInBoat(airvec)){
 								_air.add(airvec);
@@ -306,23 +311,22 @@ public class Boat {
 				int x = movevec.getBlockX();
 				int y = movevec.getBlockY();
 				int z = movevec.getBlockZ();
-				ArrayList<Chunk> chunks = new ArrayList<Chunk>();
+				//ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 				//check for changes and collisions, save new metadata, get chunks
 				for(Iterator<BlockVector> vectors = _vectors.iterator(); vectors.hasNext();){
 					BlockVector vec = vectors.next();
 					Block current = GetBlock(vec);
 					if(current.getType() != GetSavedData(vec).getType()){
 						damaged = true;
-					}else{
-						GetSavedData(vec).updateData(current);
 					}
+					GetSavedData(vec).updateData(current);
 					Block next = current.getRelative(x, y, z);
 					if(!CheckFluid(next.getType()) && !CheckInBoat(GetVector(next.getLocation()))){
 						collision = true;
 					}
-					if(!chunks.contains(next.getChunk())){
-						chunks.add(next.getChunk());
-					}
+					//if(!chunks.contains(next.getChunk())){
+					//	chunks.add(next.getChunk());
+					//}
 				}
 				if(collision){
 					Message("Collision detected, not moving!");
@@ -330,7 +334,7 @@ public class Boat {
 				if(damaged){
 					Message("Boat blocks have changed!");
 				}
-				if(!collision && !damaged){
+				if(!collision){
 					//clear old starting with breakables, replace removed blocks
 					for(Iterator<BlockVector> vectors = _vectors.iterator(); vectors.hasNext();){
 						BlockVector vec = vectors.next();
@@ -372,10 +376,10 @@ public class Boat {
 						}
 						SetBlock(vec, _breakables.get(vec));
 					}
-					for(Iterator<Chunk> chunkiterator = chunks.iterator(); chunkiterator.hasNext();){
+					/*for(Iterator<Chunk> chunkiterator = chunks.iterator(); chunkiterator.hasNext();){
 						Chunk chunk = chunkiterator.next();
 						_world.refreshChunk(chunk.getX(), chunk.getZ());
-					}
+					}*/
 					return true;
 				}
 				return false;

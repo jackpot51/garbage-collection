@@ -11,12 +11,11 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 public class ScriptBoat extends Boat implements Runnable{
-	String _script;
-	public ScriptBoat(Block controlblock, Player captain, BoatMod instance, String script){
+	Script _script;
+	public ScriptBoat(Block controlblock, Player captain, BoatMod instance, Script script){
 		super(controlblock, captain, instance);
 		_script = script;
 	}
-	
 	public boolean Sleep(int millis){
 		try {
 			Thread.sleep(millis);
@@ -25,20 +24,19 @@ public class ScriptBoat extends Boat implements Runnable{
 			return false;
 		}
 	}
-
 	@Override
 	public void run() {
 		ScriptEngineManager mgr = new ScriptEngineManager();
 		ScriptEngine jsEngine = mgr.getEngineByName("JavaScript");
 		try{
 			jsEngine.put("boat", this);
-			jsEngine.eval(new FileReader(_script));
+			jsEngine.eval(new FileReader(_script._file));
 		}catch (ScriptException ex) {
 			plugin.LogMessage(ex.getMessage());
-			plugin.Message(_captain, "The script " + _script + " failed.");
+			Message("The script " + _script._file + " failed.");
 		} catch (FileNotFoundException e) {
 			plugin.LogMessage(e.getMessage());
-			plugin.Message(_captain, "The script " + _script + " could not be found.");
+			Message("The script " + _script._file + " could not be found.");
 		}
 	}
 }
