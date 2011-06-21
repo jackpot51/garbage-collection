@@ -1,0 +1,8 @@
+name: NoteMod
+main: me.Jackpot.NoteMod.NoteMod
+version: 1
+commands:
+   note:
+      description: This command controls NoteMod's note management.
+      usage: /note [script name]
+      permissions: notemod.manage

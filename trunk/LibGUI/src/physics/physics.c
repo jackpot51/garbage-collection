@@ -23,6 +23,7 @@ printf("%s has a precision of %d bits.\n", #precision, (int)sizeof(precision)*8)
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <libgui.h>
 #include "vector.h"
 #include "object.h"
