@@ -7,5 +7,9 @@ typedef struct {
 } Object;
 
 enum {
+<<<<<<< .mine
+	ObjectSphere = 0,
+} ObjectTypes;
+=======
 	ObjectSphere,
-};
+};>>>>>>> .r29
