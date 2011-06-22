@@ -17,7 +17,7 @@ public class NoteModPlayerListener extends PlayerListener{
 	public void onPlayerInteract(PlayerInteractEvent event){
 		Player player = event.getPlayer();
 		if(event.getMaterial() == Material.PAPER){
-			if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK){
+			if(event.getAction() == Action.RIGHT_CLICK_AIR){
 				Note note = plugin.peekNote(event.getPlayer().getDisplayName());
 				if(note != null){
 					plugin.NoteMessage(player, "Holding note", note);
