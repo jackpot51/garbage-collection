@@ -60,9 +60,9 @@ public class NoteMod extends JavaPlugin {
 		}
 		setupPermissions();
 		PluginManager pm = this.getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Highest, this);
-		pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Event.Priority.Highest, this);
-		pm.registerEvent(Event.Type.PLAYER_DROP_ITEM, playerListener, Event.Priority.Highest, this);
+		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.High, this);
+		pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Event.Priority.High, this);
+		pm.registerEvent(Event.Type.PLAYER_DROP_ITEM, playerListener, Event.Priority.High, this);
 		LogMessage("Version " + this.getDescription().getVersion() + " has been enabled.");
 	}
 	
