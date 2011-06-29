@@ -13,7 +13,7 @@ gcc -c ${lib}/libgui.c -o ${bin}/libgui.o || exit 1
 ar rcs ${bin}/libgui.a ${bin}/libgui.o || exit 2
 rm ${bin}/libgui.o
 
-flags="-L${bin} -I. -lgui -lX11 \
+flags="-L${bin} -I. -lgui -lX11 -lm \
 -O3 \
 -ffast-math \
 "
@@ -30,7 +30,7 @@ do
 	if [ -n `ls src/$i/*.c` ]
 	then
 		echo "Compiling $i"
-		gcc src/$i/$i.c -o ${bin}/$i $flags -lm || exit 3
+		gcc src/$i/$i.c -o ${bin}/$i $flags || exit 3
 	fi
 done
 
