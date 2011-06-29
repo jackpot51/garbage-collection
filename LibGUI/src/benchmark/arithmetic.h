@@ -2,7 +2,7 @@
 //floats, doubles, long doubles, ints, and long ints when used
 //with standard operators.
 
-#define MAX_I 10000000
+#define MAX_I 1000000
 
 #define MATHBENCH(NAME,OPERATOR,TYPE)\
 	void  NAME ## _ ## TYPE(){\

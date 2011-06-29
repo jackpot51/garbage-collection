@@ -21,15 +21,15 @@ screeninfo *screen;
 #include "LightIntensity.h"
 #include "View2D.h"
 
-void nextFrame(View2D TheImage, Camera TheCamera, Sphere s, Color bcol, LightIntensity LIntensity){
-	for(CameraStart(&TheCamera);TheCamera.from.y<1;CameraNext(&TheCamera)){
+void nextFrame(View2D view, Camera cam, Sphere s, Color bcol, LightIntensity LIntensity){
+	for(CameraStart(&cam);cam.from.y<1;CameraNext(&cam)){
 		Vector v = {0,0,0};
 		Color col = {0,0,0};
-		if(SphereDoesRayIntersect(s,TheCamera.from,TheCamera.to,&v)==1){
+		if(SphereDoesRayIntersect(s,cam.from,cam.to,&v)==1){
 			LightIntensityDetermineIntensity(LIntensity,v,s.c,&col);
-			View2DDrawPixel(TheImage,col,v);
+			View2DDrawPixel(view,col,v);
 		}else{
-			View2DDrawPixel(TheImage,bcol,v);
+			View2DDrawPixel(view,bcol,v);
 		}
 	}
 }
@@ -50,32 +50,32 @@ int main(int argc, char *argv[]){
 	
 	Vector from = {0,0,3};
 	Vector to = {0,0,-1};
-	Camera TheCamera = {from,to,screen->y,screen->y};
+	Camera cam = {from,to,screen->y,screen->y};
 
-	View2D TheImage = {TheCamera.resX, TheCamera.resY};
+	View2D view = {cam.resX, cam.resY};
 	Color bcol = {0.5,0.5,0.5};
 	
-	nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
+	nextFrame(view,cam,s,bcol,LIntensity);
 
 	drawtext(0,0,"Press q to exit.",0xFFFFFF);	
 	unsigned char key = 0;
 	while(!checkkey(KEYQ)){
 			hlt();
-			if(checkkey(KEYUP) & LIntensity.light.y<1){
+			if(checkkey(KEYW) & LIntensity.light.y<1){
 					LIntensity.light.y-=0.4;
-					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
+					nextFrame(view,cam,s,bcol,LIntensity);
 			}
-			if(checkkey(KEYDOWN) & LIntensity.light.y>-1){
+			if(checkkey(KEYS) & LIntensity.light.y>-1){
 					LIntensity.light.y+=0.4;
-					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
+					nextFrame(view,cam,s,bcol,LIntensity);
 			}
-			if(checkkey(KEYLEFT) & LIntensity.light.x>-1){
+			if(checkkey(KEYA) & LIntensity.light.x>-1){
 					LIntensity.light.x-=0.4;
-					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
+					nextFrame(view,cam,s,bcol,LIntensity);
 			}
-			if(checkkey(KEYRIGHT) & LIntensity.light.x<1){
+			if(checkkey(KEYD) & LIntensity.light.x<1){
 					LIntensity.light.x+=0.4;
-					nextFrame(TheImage,TheCamera,s,bcol,LIntensity);
+					nextFrame(view,cam,s,bcol,LIntensity);
 			}
 	}
 	reset();
