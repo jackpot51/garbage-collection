@@ -167,7 +167,6 @@ public class BoatMod extends JavaPlugin {
 									}else{
 										scripts.put(scriptname, new Script(permission, ""));
 									}
-									LogMessage("Got permission " + permission + " for script " + scriptname);
 									break;
 							}
 						}

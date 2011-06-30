@@ -1,6 +1,6 @@
 name: BoatMod
 main: me.Jackpot.BoatMod.BoatMod
-version: 5
+version: 6
 commands:
    boatmod:
       description: This command controls BoatMod's script engine.

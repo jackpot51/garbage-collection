@@ -29,7 +29,8 @@ public class BlockData{
 	}
 	public void setBlock(Block b){
 		Material m = _type;
-		b.setTypeIdAndData(m.getId(), _data, true);
+		b.setType(m);
+		b.setData(_data, true);
 		int extrai = 0;
 		if(b.getState() instanceof Sign){
 			Sign sign = (Sign)b.getState();
@@ -53,7 +54,7 @@ public class BlockData{
 		}
 		if(b.getState() instanceof NoteBlock){
 			NoteBlock noteblock = (NoteBlock)b.getState();
-			noteblock.setNote((Byte)_extra.get(extrai));
+			noteblock.setRawNote((Byte)_extra.get(extrai));
 			extrai++;
 		}
 	}
@@ -77,7 +78,7 @@ public class BlockData{
 		}
 		if(b.getState() instanceof NoteBlock){
 			NoteBlock noteblock = (NoteBlock)b.getState();
-			_extra.add((Byte)noteblock.getNote());
+			_extra.add((Byte)noteblock.getRawNote());
 		}
 	}
 	public Material getType(){

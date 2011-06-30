@@ -44,6 +44,7 @@ public class Boat {
 				_captain = captain;
 				plugin = instance;
 				_maxsize = plugin.MaxBoatSize(captain);
+				Message("Starting with block type " + controlblock.getType().name() + " with data " + controlblock.getData());
 				if(!FindBlocks(controlblock)){
 					Message("Warning! You hit the boat size limit!");
 				}
@@ -123,16 +124,20 @@ public class Boat {
 						);
 			}
 			
-			private boolean CheckBreakable(Material m){
+			private boolean CheckBreakable(Block b){
+				Material m = b.getType();
 				return (
 						m == Material.TORCH ||
 						m == Material.LADDER ||
 						m == Material.WOODEN_DOOR ||
+						m == Material.IRON_DOOR ||
+						m == Material.BED_BLOCK ||
 						m == Material.CAKE_BLOCK ||
 						m == Material.SIGN ||
 						m == Material.SIGN_POST ||
 						m == Material.WALL_SIGN ||
 						m == Material.TRAP_DOOR ||
+						m == Material.LEVER ||
 						m == Material.REDSTONE_WIRE ||
 						m == Material.REDSTONE_TORCH_OFF ||
 						m == Material.REDSTONE_TORCH_ON ||
@@ -174,7 +179,7 @@ public class Boat {
 					BlockData bd = new BlockData(b);
 					if(CheckBoatable(b.getType())){
 						if(_size < _maxsize){
-							if(CheckBreakable(b.getType())){
+							if(CheckBreakable(b)){
 								_breakables.put(vec, bd);
 							}else{
 								_blocks.put(vec, bd);
