@@ -24,6 +24,7 @@ import com.nijikokun.bukkit.Permissions.Permissions;
 import org.bukkit.plugin.Plugin;
 
 public class BoatMod extends JavaPlugin {
+	public static BoatMod plugin;
 	String name;
 	Hashtable<String, Hashtable<String,String>> config;
 	ArrayList<Material> boatable;
@@ -40,6 +41,7 @@ public class BoatMod extends JavaPlugin {
 	}
 	
 	public void onEnable(){
+		plugin = this;
 		name = getDescription().getName();
 		config = new Hashtable<String, Hashtable<String, String>>();
 		boatable = new ArrayList<Material>();
@@ -73,25 +75,40 @@ public class BoatMod extends JavaPlugin {
 			RemoveBoat(players.nextElement());
 		}
 		LogMessage("Successfully disabled.");
+		plugin = null;
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
-		if(cmd.getName().equalsIgnoreCase("boatmod")){
-			if(args.length == 1 && scripts.containsKey(args[0])){
-				if(sender instanceof Player){
+		if(sender instanceof Player){
+			Player player = (Player)sender;
+			if(cmd.getName().equalsIgnoreCase("boatscript")){
+				if(args.length == 1 && scripts.containsKey(args[0])){
 					Script script = scripts.get(args[0]);
-					if(permissionHandler != null && (script.isValid() || permissionHandler.permission((Player)sender, script._permission))){
-						scriptselect.put((Player)sender, script);
-						Message((Player)sender, "Click a boat to apply the " + args[0] + " script to it.");
+					if(permissionHandler != null && (script.isValid() || permissionHandler.permission(player, script._permission))){
+						scriptselect.put(player, script);
+						Message(player, "Click a boat to apply the " + args[0] + " script to it.");
 					}else{
-						Message((Player)sender, "You do not have access to the " + args[0] + " script.");
+						Message(player, "You do not have access to the " + args[0] + " script.");
 					}
-					
-				}else{
-					LogMessage("Only players may use this command.");
+					return true;
 				}
-				return true;
 			}
+			else if(cmd.getName().equalsIgnoreCase("boatspeed")){
+				if(args.length == 1){
+					Integer newspeed = Integer.parseInt(args[0]);
+					if(newspeed > 0 && newspeed < MaxBoatSpeed(player)){
+						Boat boat = getBoat(player);
+						if(boat != null){
+							boat.ChangeSpeed(newspeed);
+						}
+					}else{
+						Message(player, "You must supply an integer between 1 and " + MaxBoatSpeed(player) + ".");
+					}
+					return true;
+				}
+			}
+		}else{
+			LogMessage("Only players may use the " + cmd.getName() + " command.");
 		}
 		return false;
 	}
@@ -229,13 +246,13 @@ public class BoatMod extends JavaPlugin {
 			scriptboats.remove(player);
 		}
 		if(scriptselect.containsKey(player)){
-			ScriptBoat sboat = new ScriptBoat(block, player, this, scripts.get(scriptselect.get(player)));
+			ScriptBoat sboat = new ScriptBoat(block, player, scripts.get(scriptselect.get(player)));
 			Thread boatthread = new Thread(sboat);
 			scriptboats.put(player, boatthread);
 			boatthread.start();
 			boat = sboat;
 		}else{
-			boat = new Boat(block, player, this);
+			boat = new Boat(block, player);
 			boats.put(player, boat);
 			Message(player, "You now have control of " + (boat._vectors.size()) + " blocks.");
 		}
@@ -268,10 +285,10 @@ public class BoatMod extends JavaPlugin {
 		}
 	}
 	
-	public void ChangeSpeed(Player player){
+	public void RotateBoat(Player player){
 		Boat boat = getBoat(player);
 		if(boat != null){
-			boat.changeSpeed();
+			boat.Rotate(player.getLocation().getDirection());
 		}
 	}
 }

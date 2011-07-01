@@ -2,7 +2,9 @@ name: BoatMod
 main: me.Jackpot.BoatMod.BoatMod
 version: 6
 commands:
-   boatmod:
+   boatscript:
       description: This command controls BoatMod's script engine.
-      usage: /boatmod [script name]
-      permissions: boatmod.script
+      usage: /boatscript [script name]
+   boatspeed:
+      description: This command controls BoatMod's script engine.
+      usage: /boatspeed [speed]

@@ -29,7 +29,7 @@ public class BoatModPlayerListener extends PlayerListener{
 				plugin.MoveBoat(player);
 			}
 			else if(event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK){
-				plugin.ChangeSpeed(player);
+				plugin.RotateBoat(player);
 			}
 		}
 	}
