@@ -12,8 +12,8 @@ import org.bukkit.entity.Player;
 
 public class ScriptBoat extends Boat implements Runnable{
 	Script _script;
-	public ScriptBoat(Block controlblock, Player captain, BoatMod instance, Script script){
-		super(controlblock, captain, instance);
+	public ScriptBoat(Block controlblock, Player captain, Script script){
+		super(controlblock, captain);
 		_script = script;
 	}
 	public boolean Sleep(int millis){
@@ -32,10 +32,10 @@ public class ScriptBoat extends Boat implements Runnable{
 			jsEngine.put("boat", this);
 			jsEngine.eval(new FileReader(_script._file));
 		}catch (ScriptException ex) {
-			plugin.LogMessage(ex.getMessage());
+			BoatMod.plugin.LogMessage(ex.getMessage());
 			Message("The script " + _script._file + " failed.");
 		} catch (FileNotFoundException e) {
-			plugin.LogMessage(e.getMessage());
+			BoatMod.plugin.LogMessage(e.getMessage());
 			Message("The script " + _script._file + " could not be found.");
 		}
 	}

@@ -1,10 +1,11 @@
 package me.Jackpot.BoatMod;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,42 +14,33 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
 public class Boat {
-			ArrayList<BlockVector> _vectors;
-			Hashtable<BlockVector, BlockData> _blocks;
-			Hashtable<BlockVector, BlockData> _breakables;
-			Hashtable<BlockVector, BlockData> _removed;
-			ArrayList<BlockVector> _air;
-			int _size;
-			BlockVector _offset;
-			int _movespeed;
+			ArrayList<LocalVector> _vectors;
+			Hashtable<LocalVector, BlockData> _blocks = new Hashtable<LocalVector, BlockData>();
+			Hashtable<LocalVector, BlockData> _breakables = new Hashtable<LocalVector, BlockData>();
+			Hashtable<Vector, BlockData> _removed = new Hashtable<Vector, BlockData>();
+			ArrayList<LocalVector> _air = new ArrayList<LocalVector>();
+			int _size = 0;
+			double lasttheta = 0;
+			Vector _offset;
+			Vector _dir;
+			int _movespeed = 1;
 			int _maxsize;
-			//double _theta;
-			//Vector _angle;
 			World _world;
 			Player _captain;
-			BoatMod plugin;
 			
-			public Boat(Block controlblock, Player captain, BoatMod instance){
-				_blocks = new Hashtable<BlockVector, BlockData>();
-				_breakables = new Hashtable<BlockVector, BlockData>();
-				_removed = new Hashtable<BlockVector, BlockData>();
-				_air = new ArrayList<BlockVector>();
-				_size = 0;
-				_offset = controlblock.getLocation().toVector().toBlockVector();
-				_movespeed = 1;
+			public Boat(Block controlblock, Player captain){
+				_offset = controlblock.getLocation().toVector();
+				_dir = GetCompassDirection(captain.getLocation().getDirection());
 				_world = controlblock.getWorld();
 				_captain = captain;
-				plugin = instance;
-				_maxsize = plugin.MaxBoatSize(captain);
-				Message("Starting with block type " + controlblock.getType().name() + " with data " + controlblock.getData());
+				_maxsize = BoatMod.plugin.MaxBoatSize(captain);
 				if(!FindBlocks(controlblock)){
 					Message("Warning! You hit the boat size limit!");
 				}
-				_vectors = new ArrayList<BlockVector>(_breakables.keySet());
+				_vectors = new ArrayList<LocalVector>(_breakables.keySet());
 				_vectors.addAll(_blocks.keySet());
 				FindAir();
 			}
@@ -58,16 +50,13 @@ public class Boat {
 			}
 			
 			public void Message(String msg){
-				plugin.Message(_captain, msg);
+				BoatMod.plugin.Message(_captain, msg);
 			}
 			
-			public void changeSpeed(){
-				if(_movespeed < plugin.MaxBoatSpeed(_captain)){
-					_movespeed++;
-					Message("Moving " + _movespeed + " blocks per click.");
-				}else{
-					_movespeed = 1;
-					Message("Moving " + _movespeed + " block per click.");
+			public void ChangeSpeed(int movespeed){
+				if(_movespeed > 0 && _movespeed < BoatMod.plugin.MaxBoatSpeed(_captain) ){
+					_movespeed = movespeed;
+					Message("Moving " + _movespeed + " block" + (movespeed>1?"s":"") + " per click.");
 				}
 			}
 			
@@ -76,10 +65,10 @@ public class Boat {
 			}
 			
 			public boolean Move(Vector dir){
-				BlockVector vec = GetCompassDirection(dir);
+				Vector vec = GetCompassDirection(dir);
 				if(vec.length() == 1){
 					for(int i = 0; i < _movespeed; i++){ //it has to be done this way to keep water intact and properly collide
-						if(!MoveBlocks(vec)){
+						if(!MoveBlocks(vec, lasttheta)){
 							return false;
 						}
 					}
@@ -89,8 +78,25 @@ public class Boat {
 				}
 			}
 			
-			private BlockVector GetCompassDirection(Vector dir){
-				BlockVector vec = new BlockVector(0,0,0);
+			public boolean Rotate(Vector dir){
+				Vector vec = GetCompassDirection(dir);
+				if(vec.length() == 1){
+					double theta = 0;
+					Vector cross = _dir.clone().crossProduct(vec);
+					if(_dir.dot(vec) == -1){
+						theta = Math.PI;
+					}else if(cross.getBlockY() == 1){
+						theta = Math.PI/2.0;
+					}else if(cross.getBlockY() == -1){
+						theta = Math.PI*3.0/2.0;
+					}
+					return MoveBlocks(new Vector(0,0,0), theta);
+				}
+				return false;
+			}
+			
+			private Vector GetCompassDirection(Vector dir){
+				Vector vec = new Vector(0,0,0);
 				if(dir.getX() > 0.75){
 					vec.setX(1);
 				}
@@ -113,7 +119,7 @@ public class Boat {
 				}
 				return vec;
 			}
-			
+						
 			private boolean CheckFluid(Material m){
 				return (
 						m == Material.AIR ||
@@ -144,40 +150,24 @@ public class Boat {
 						m == Material.STONE_BUTTON
 						);
 			}
-
-			private boolean CheckBoatable(Material m){
-				return plugin.CheckBoatable(m);
-			}
 			
-			private BlockVector GetVector(Location l){
-				BlockVector vec = l.toVector().toBlockVector();
-				vec.subtract(_offset);
-				return vec;
-			}
-			
-			private BlockVector GetReal(BlockVector vec){
-				BlockVector real = vec.clone();
-				real.add(_offset);
-				return real;
-			}
-			
-			private boolean CheckInBoatInit(BlockVector vec){
+			private boolean CheckInBoatInit(LocalVector vec){
 				return (
 						_blocks.containsKey(vec) ||
 						_breakables.containsKey(vec)
 						);
 			}
 			
-			private boolean CheckInBoat(BlockVector vec){
+			private boolean CheckInBoat(LocalVector vec){
 				return _vectors.contains(vec);
 			}
 			
 			private boolean FindBlocks(Block b){
 				boolean success = true;
-				BlockVector vec = GetVector(b.getLocation());
-				if(!CheckInBoatInit(vec) && !_removed.containsKey(GetReal(vec))){
+				LocalVector vec = new LocalVector(b.getLocation().toVector(), _offset, 0);
+				if(!CheckInBoatInit(vec) && !_removed.containsKey(vec.toReal(_offset, 0))){
 					BlockData bd = new BlockData(b);
-					if(CheckBoatable(b.getType())){
+					if(BoatMod.plugin.CheckBoatable(b.getType())){
 						if(_size < _maxsize){
 							if(CheckBreakable(b)){
 								_breakables.put(vec, bd);
@@ -200,14 +190,14 @@ public class Boat {
 							success=false;
 						}
 					}else{
-						_removed.put(GetReal(vec), bd);
+						_removed.put(vec.toReal(_offset, 0), bd);
 					}
 				}
 				return success;
 			}
 			
-			private boolean CheckSurrounding(Material m, BlockVector vec){
-				Block b = GetBlock(vec);
+			private boolean CheckSurrounding(Material m, LocalVector vec){
+				Block b = GetBlock(vec, 0);
 				return (
 						b.getRelative(0, 0, 0).getType() == m ||
 						b.getRelative(0, 0, 1).getType() == m ||
@@ -225,8 +215,8 @@ public class Boat {
 				int maxy = 0;
 				int minz = 0;
 				int maxz = 0;
-				for(Iterator<BlockVector> vectors = _vectors.iterator(); vectors.hasNext();){
-					BlockVector vec = vectors.next();
+				for(Iterator<LocalVector> vectors = _vectors.iterator(); vectors.hasNext();){
+					LocalVector vec = vectors.next();
 					int blockx = vec.getBlockX();
 					int blocky = vec.getBlockY();
 					int blockz = vec.getBlockZ();
@@ -253,16 +243,16 @@ public class Boat {
 						boolean hitblock = false;
 						Material hitfluid = null;
 						for(int x = minx; x <= maxx; x++){
-							BlockVector blockvec = new BlockVector(x, y, z);
-							if(CheckInBoat(blockvec)){
+							LocalVector vec = new LocalVector(new Vector(x, y, z), _offset, 0);
+							if(CheckInBoat(vec)){
 								if(hitfluid == null){
-									if(CheckSurrounding(Material.WATER, blockvec)){
+									if(CheckSurrounding(Material.WATER, vec)){
 										hitfluid = Material.WATER;
-									}else if(CheckSurrounding(Material.STATIONARY_WATER, blockvec)){
+									}else if(CheckSurrounding(Material.STATIONARY_WATER, vec)){
 										hitfluid = Material.STATIONARY_WATER;
-									}else if(CheckSurrounding(Material.LAVA, blockvec)){
+									}else if(CheckSurrounding(Material.LAVA, vec)){
 										hitfluid = Material.LAVA;
-									}else if(CheckSurrounding(Material.STATIONARY_LAVA, blockvec)){
+									}else if(CheckSurrounding(Material.STATIONARY_LAVA, vec)){
 										hitfluid = Material.STATIONARY_LAVA;
 									}
 								}
@@ -274,117 +264,116 @@ public class Boat {
 							}
 						}
 						for(int x = startx; x <= lastx; x++){
-							BlockVector airvec = new BlockVector(x, y, z);
+							LocalVector vec = new LocalVector(new Vector(x, y, z), _offset, 0);
 							if(hitfluid != null){
-								_removed.put(GetReal(airvec), new BlockData(hitfluid, (byte) 0));
+								_removed.put(vec.toReal(_offset, 0), new BlockData(hitfluid, (byte) 0));
 							}
-							if(!CheckInBoat(airvec)){
-								_air.add(airvec);
+							if(!CheckInBoat(vec)){
+								_air.add(vec);
 							}
 						}
 					}
 				}
 			}
 			
-			private void SetBlock(BlockVector vec, BlockData bd){
-				BlockVector real = GetReal(vec);
+			private void SetBlock(LocalVector vec, double theta, BlockData bd){
+				Vector real = vec.toReal(_offset, theta);
 				bd.setBlock(_world.getBlockAt(real.getBlockX(), real.getBlockY(), real.getBlockZ()));
 			}
 			
-			private Block GetBlock(BlockVector vec){
-				BlockVector real = GetReal(vec);
+			private Block GetBlock(LocalVector vec, double theta){
+				Vector real = vec.toReal(_offset, theta);
 				return _world.getBlockAt(real.getBlockX(), real.getBlockY(), real.getBlockZ());
 			}
 			
-			private BlockData GetSavedData(BlockVector vec){
+			private BlockData GetSavedData(LocalVector vec){
 				if(_breakables.containsKey(vec)){
 					return _breakables.get(vec);
 				}else{
 					return _blocks.get(vec);
 				}
 			}
-			
-			private boolean CheckAir(BlockVector vec, BlockVector movevec){
-				BlockVector airvec = vec.clone();
-				airvec.subtract(movevec);
-				return _air.contains(airvec);
+						
+			enum BoatStatus{
+				DAMAGED, COLLISION;
 			}
 						
-			private boolean MoveBlocks(BlockVector movevec){
-				boolean collision = false;
-				boolean damaged = false;
+			private EnumSet<BoatStatus> checkStatus(Vector movevec, double theta){
+				EnumSet<BoatStatus> status = EnumSet.noneOf(BoatStatus.class);
 				int x = movevec.getBlockX();
 				int y = movevec.getBlockY();
 				int z = movevec.getBlockZ();
-				//ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-				//check for changes and collisions, save new metadata, get chunks
-				for(Iterator<BlockVector> vectors = _vectors.iterator(); vectors.hasNext();){
-					BlockVector vec = vectors.next();
-					Block current = GetBlock(vec);
+				for(Iterator<LocalVector> vectors = _vectors.iterator(); vectors.hasNext();){
+					LocalVector vec = vectors.next();
+					Block current = GetBlock(vec, lasttheta);
 					if(current.getType() != GetSavedData(vec).getType()){
-						damaged = true;
+						status.add(BoatStatus.DAMAGED);
 					}
 					GetSavedData(vec).updateData(current);
-					Block next = current.getRelative(x, y, z);
-					if(!CheckFluid(next.getType()) && !CheckInBoat(GetVector(next.getLocation()))){
-						collision = true;
+					Block next = GetBlock(vec, theta).getRelative(x, y, z);
+					LocalVector nextvec = new LocalVector(next.getLocation().toVector(), _offset, lasttheta);
+					if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
+						status.add(BoatStatus.COLLISION);
 					}
-					//if(!chunks.contains(next.getChunk())){
-					//	chunks.add(next.getChunk());
-					//}
 				}
-				if(collision){
-					Message("Collision detected, not moving!");
-				}
-				if(damaged){
+				if(status.contains(BoatStatus.DAMAGED)){
 					Message("Boat blocks have changed!");
 				}
-				if(!collision){
+				if(status.contains(BoatStatus.COLLISION)){
+					Message("Collision detected, not moving!");
+				}
+				return status;
+			}
+						
+			private boolean MoveBlocks(Vector movevec, double theta){
+				EnumSet<BoatStatus> status = checkStatus(movevec, theta);
+				if(!status.contains(BoatStatus.COLLISION)){
 					//clear old starting with breakables, replace removed blocks
-					for(Iterator<BlockVector> vectors = _vectors.iterator(); vectors.hasNext();){
-						BlockVector vec = vectors.next();
-						GetSavedData(vec).clearBlock(GetBlock(vec));
-						if(!CheckAir(vec, movevec) && _removed.containsKey(GetReal(vec))){
-							SetBlock(vec, _removed.get(GetReal(vec)));
-							_removed.remove(GetReal(vec));
+					for(Iterator<LocalVector> vectors = _vectors.iterator(); vectors.hasNext();){
+						LocalVector vec = vectors.next();
+						GetSavedData(vec).clearBlock(GetBlock(vec, lasttheta));
+						Vector real = vec.toReal(_offset, lasttheta);
+						if(!_air.contains(vec) && _removed.containsKey(real)){
+							SetBlock(vec, lasttheta, _removed.get(real));
+							_removed.remove(real);
 						}else{
-							SetBlock(vec, new BlockData(Material.AIR,(byte) 0));
+							SetBlock(vec, lasttheta, new BlockData(Material.AIR,(byte) 0));
 						}
 					}
 					//teleport entities
 					List<Entity> entities = _world.getEntities();
 					for(int i = 0; i < entities.size(); i++){
 						Location entityloc = entities.get(i).getLocation().clone();
-						if(_blocks.containsKey(GetVector(entityloc.getBlock().getFace(BlockFace.DOWN).getLocation()))){
-							entityloc.setX(entityloc.getX() + movevec.getBlockX());
-							entityloc.setY(entityloc.getY() + movevec.getBlockY());
-							entityloc.setZ(entityloc.getZ() + movevec.getBlockZ());
+						Vector entityreal = entityloc.getBlock().getFace(BlockFace.DOWN).getLocation().toVector();
+						LocalVector entitylocal = new LocalVector(entityreal, _offset, lasttheta); 
+						if(_blocks.containsKey(entitylocal)){
+							Vector entitynext = entitylocal.toReal(_offset, theta);
+							entityloc.setX(entityloc.getX() - entityreal.getBlockX() + entitynext.getBlockX() + movevec.getBlockX());
+							entityloc.setY(entityloc.getY() - entityreal.getBlockY() + entitynext.getBlockY() + movevec.getBlockY());
+							entityloc.setZ(entityloc.getZ() - entityreal.getBlockZ() + entitynext.getBlockZ() + movevec.getBlockZ());
 							entities.get(i).teleport(entityloc);
 						}
 					}
 					_offset.add(movevec);
 					//place new nonbreakables, gather removed blocks
-					for(Enumeration<BlockVector> vectors = _blocks.keys(); vectors.hasMoreElements();){
-						BlockVector vec = vectors.nextElement();
-						BlockVector real = GetReal(vec);
+					for(Enumeration<LocalVector> vectors = _blocks.keys(); vectors.hasMoreElements();){
+						LocalVector vec = vectors.nextElement();
+						Vector real = vec.toReal(_offset, theta);
 						if(!_removed.containsKey(real)){
-							_removed.put(real, new BlockData(GetBlock(vec)));
+							_removed.put(real, new BlockData(GetBlock(vec, theta)));
 						}
-						SetBlock(vec, _blocks.get(vec));
+						SetBlock(vec, theta, _blocks.get(vec));
 					}
 					//place new breakables, gather removed blocks
-					for(Enumeration<BlockVector> vectors = _breakables.keys(); vectors.hasMoreElements();){
-						BlockVector vec = vectors.nextElement();
-						BlockVector real = GetReal(vec);
+					for(Enumeration<LocalVector> vectors = _breakables.keys(); vectors.hasMoreElements();){
+						LocalVector vec = vectors.nextElement();
+						Vector real = vec.toReal(_offset, theta);
 						if(!_removed.containsKey(real)){
-							_removed.put(real, new BlockData(GetBlock(vec)));
+							_removed.put(real, new BlockData(GetBlock(vec, theta)));
 						}
-						SetBlock(vec, _breakables.get(vec));
+						SetBlock(vec, theta, _breakables.get(vec));
 					}
-					/*for(Iterator<Chunk> chunkiterator = chunks.iterator(); chunkiterator.hasNext();){
-						Chunk chunk = chunkiterator.next();
-						_world.refreshChunk(chunk.getX(), chunk.getZ());
-					}*/
+					lasttheta = theta;
 					return true;
 				}
 				return false;
