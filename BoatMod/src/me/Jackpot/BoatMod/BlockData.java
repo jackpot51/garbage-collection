@@ -1,97 +1,111 @@
 package me.Jackpot.BoatMod;
 
-import java.util.ArrayList;
+import java.util.Stack;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.ContainerBlock;
 import org.bukkit.block.Furnace;
 import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Directional;
+import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 
 public class BlockData{
-	Material _type;
-	byte _data;
-	ArrayList<Object> _extra = new ArrayList<Object>();
+	MaterialData _data;
+	Stack<Object> _extra = new Stack<Object>();
 	public BlockData(Block b){
 		updateData(b);
 	}
-	public BlockData(Material m, byte d){
-		_type = m;
-		_data = d;
+	public BlockData(Material m){
+		_data = new MaterialData(m, (byte) 0);
 	}
-	public void clearBlock(Block b){
+	public static void clearBlock(Block b){
 		if(b.getState() instanceof ContainerBlock){
 			ContainerBlock container = (ContainerBlock) b.getState();
 			container.getInventory().clear();
 		}
 	}
-	public void setBlock(Block b){
-		Material m = _type;
-		b.setType(m);
-		b.setData(_data, true);
-		int extrai = 0;
-		if(b.getState() instanceof Sign){
-			Sign sign = (Sign)b.getState();
-			String lines[] = (String[]) _extra.get(extrai);
-			extrai++;
+	private BlockFace rotate(BlockFace face, double theta){
+		if(theta < 0){
+			theta += Math.PI*2.0;
+		}
+		if(theta == Math.PI/2.0 || theta == Math.PI*3.0/2.0){
+			switch(face){
+				case NORTH:
+					face = BlockFace.WEST;
+					break;
+				case WEST:
+					face = BlockFace.SOUTH;
+					break;
+				case SOUTH:
+					face = BlockFace.EAST;
+					break;
+				case EAST:
+					face = BlockFace.NORTH;
+					break;
+			}
+			theta -= Math.PI/2.0;
+		}
+		if(theta == Math.PI){
+			face = face.getOppositeFace();
+		}
+		return face;
+	}
+	public void setBlock(Block b, double dtheta){
+		MaterialData md = _data;
+		b.setTypeId(md.getItemTypeId());
+		//set rotation
+		if(md instanceof Ladder){
+			((Ladder)md).setFacingDirection(rotate(((Ladder)md).getAttachedFace() ,dtheta));
+		}
+		else if(md instanceof Directional){
+			((Directional)md).setFacingDirection(rotate(((Directional)md).getFacing(), dtheta));
+		}
+		//set extra states
+		BlockState bs = b.getState();
+		if(bs instanceof NoteBlock){
+			((NoteBlock)bs).setRawNote((Byte)_extra.pop());
+		}
+		if(bs instanceof Furnace){
+			((Furnace)bs).setBurnTime((Short)_extra.pop());
+			((Furnace)bs).setCookTime((Short)_extra.pop());
+		}
+		if(bs instanceof ContainerBlock){
+			((ContainerBlock)bs).getInventory().setContents((ItemStack[])_extra.pop());
+		}
+		if(bs instanceof Sign){
+			String lines[] = (String[]) _extra.pop();
 			for(int i = 0; i < lines.length; i++){
-				sign.setLine(i, lines[i]);
+				((Sign)bs).setLine(i, lines[i]);
 			}
 		}
-		if(b.getState() instanceof ContainerBlock){
-			ContainerBlock container = (ContainerBlock)b.getState();
-			container.getInventory().setContents((ItemStack[])_extra.get(extrai));
-			extrai++;
-		}
-		if(b.getState() instanceof Furnace){
-			Furnace furnace = (Furnace)b.getState();
-			furnace.setBurnTime((Short)_extra.get(extrai));
-			extrai++;
-			furnace.setCookTime((Short)_extra.get(extrai));
-			extrai++;
-		}
-		if(b.getState() instanceof NoteBlock){
-			NoteBlock noteblock = (NoteBlock)b.getState();
-			noteblock.setRawNote((Byte)_extra.get(extrai));
-			extrai++;
-		}
+		b.setData(md.getData(), true);
 	}
 	public void updateData(Block b){
-		Material m = b.getType();
-		_type = m;
-		_data = b.getData();
+		BlockState bs = b.getState();
+		_data = bs.getData();
+		//get extra states
 		_extra.clear();
-		if(b.getState() instanceof Sign){
-			Sign sign = (Sign)b.getState();
-			_extra.add(sign.getLines());
+		if(bs instanceof Sign){
+			_extra.push(((Sign)bs).getLines());
 		}
-		if(b.getState() instanceof ContainerBlock){
-			ContainerBlock container = (ContainerBlock)b.getState();
-			_extra.add(container.getInventory().getContents());
+		if(bs instanceof ContainerBlock){
+			_extra.push(((ContainerBlock)bs).getInventory().getContents());
 		}
-		if(b.getState() instanceof Furnace){
-			Furnace furnace = (Furnace)b.getState();
-			_extra.add((Short)furnace.getBurnTime());
-			_extra.add((Short)furnace.getCookTime());
+		if(bs instanceof Furnace){
+			_extra.push((Short)((Furnace)bs).getBurnTime());
+			_extra.push((Short)((Furnace)bs).getCookTime());
 		}
-		if(b.getState() instanceof NoteBlock){
-			NoteBlock noteblock = (NoteBlock)b.getState();
-			_extra.add((Byte)noteblock.getRawNote());
+		if(bs instanceof NoteBlock){
+			_extra.push((Byte)((NoteBlock)bs).getRawNote());
 		}
 	}
 	public Material getType(){
-		return _type;
-	}
-	public byte getData(){
-		return _data;
-	}
-	public void setData(byte data){
-		_data = data;
-	}
-	public Object getExtra(){
-		return _extra;
+		return _data.getItemType();
 	}
 }

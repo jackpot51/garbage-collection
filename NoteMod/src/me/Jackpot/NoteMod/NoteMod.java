@@ -166,6 +166,7 @@ public class NoteMod extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
 		if(cmd.getName().equalsIgnoreCase("note")){
 			if(sender instanceof Player){
+				boolean syntax = false;
 				Player player = (Player)sender;
 				if(args.length > 1){
 					if(args[0].equalsIgnoreCase("add")){
@@ -178,7 +179,6 @@ public class NoteMod extends JavaPlugin {
 						}else{
 							Message(player, "You already have the maximum number of notes.");
 						}
-						return true;
 					}
 					else if(args[0].equalsIgnoreCase("del")){
 						Integer num = Integer.parseInt(args[1]);
@@ -189,7 +189,6 @@ public class NoteMod extends JavaPlugin {
 						}else{
 							Message(player, "Could not find note (#" + num + ").");
 						}
-						return true;
 					}
 					else if(args[0].equalsIgnoreCase("hold")){
 						Integer num = Integer.parseInt(args[1]);
@@ -199,7 +198,6 @@ public class NoteMod extends JavaPlugin {
 							pushNote(player.getDisplayName(), note);
 							NoteMessage(player, "Moved note (#" + num + ") to top note", note);
 						}
-						return true;
 					}
 					else if(args[0].equalsIgnoreCase("show")){
 						Integer num = Integer.parseInt(args[1]);
@@ -209,26 +207,34 @@ public class NoteMod extends JavaPlugin {
 						}else{
 							Message(player, "Could not find note (#" + num + ").");
 						}
+					}else{
+						syntax = true;
+					}
+				}else if(args.length > 0){
+					if(args[0].equalsIgnoreCase("load")){
+						try {
+							ReadNotes(datadir);
+							Message(player, "Notes loaded.");
+						} catch (IOException e) {
+							LogMessage("Error @ ReadNotes: " + e.getMessage());
+						}
 						return true;
+					}else if(args[0].equalsIgnoreCase("save")){
+						try{
+							SaveNotes(datadir);
+							Message(player, "Notes saved.");
+						}catch (IOException e){
+							LogMessage("Error @ SaveNotes: " + e.getMessage());
+						}
+					}else{
+						syntax = true;
 					}
-				}else if(args[0].equalsIgnoreCase("load")){
-					try {
-						ReadNotes(datadir);
-						Message(player, "Notes loaded.");
-					} catch (IOException e) {
-						LogMessage("Error @ ReadNotes: " + e.getMessage());
-					}
-					return true;
-				}else if(args[0].equalsIgnoreCase("save")){
-					try{
-						SaveNotes(datadir);
-						Message(player, "Notes saved.");
-					}catch (IOException e){
-						LogMessage("Error @ SaveNotes: " + e.getMessage());
-					}
-					return true;
+				}else{
+					syntax = true;
 				}
-				Message(player, "Commands: add [text], del [#], hold [#], show [#], load, save.");
+				if(syntax){
+					Message(player, "Commands: add [text], del [#], hold [#], show [#].");
+				}
 			}else{
 				LogMessage("Only players may use this command.");
 			}
