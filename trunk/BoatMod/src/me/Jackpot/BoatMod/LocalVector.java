@@ -3,7 +3,10 @@ package me.Jackpot.BoatMod;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
-public class LocalVector extends BlockVector{
+public class LocalVector extends BlockVector {
+	public LocalVector(Vector vec){
+		super(vec.toBlockVector());
+	}
 	
 	public LocalVector(Vector real, Vector offset, double theta){
 		super((real.getBlockX() - offset.getBlockX())*(int)Math.round(Math.cos(theta)) - (real.getBlockZ() - offset.getBlockZ())*(int)Math.round(Math.sin(theta)),
