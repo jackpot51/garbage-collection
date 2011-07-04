@@ -128,6 +128,7 @@ public class Boat {
 			
 			EnumSet<Material> breakable = EnumSet.of(Material.TORCH, Material.LADDER, Material.CAKE_BLOCK, Material.SIGN,
 													Material.SIGN_POST, Material.WALL_SIGN, Material.TRAP_DOOR, Material.LEVER,
+													//Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK, Material.BED_BLOCK,
 													Material.REDSTONE_WIRE, Material.REDSTONE_TORCH_OFF, Material.REDSTONE_TORCH_ON,
 													Material.STONE_BUTTON);
 			
@@ -250,7 +251,7 @@ public class Boat {
 								if(hitfluid == null){
 									for(Iterator<Material> materials = fluids.iterator(); materials.hasNext();){
 										Material m = materials.next();
-										if(CheckSurrounding(m, vec)){
+										if(m != Material.AIR && CheckSurrounding(m, vec)){
 											hitfluid = m;
 											break;
 										}
