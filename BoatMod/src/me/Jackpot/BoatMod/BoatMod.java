@@ -254,9 +254,9 @@ public class BoatMod extends JavaPlugin {
 		}else{
 			boat = new Boat(block, player);
 			boats.put(player, boat);
-			Message(player, "You now have control of " + (boat._vectors.size()) + " blocks.");
+			Message(player, "You now have control of " + (boat._size) + " blocks.");
 		}
-		LogMessage(player.getDisplayName() + " created a boat of size " + boat._vectors.size() + " blocks.");
+		LogMessage(player.getDisplayName() + " created a boat of size " + boat._size + " blocks.");
 	}
 	
 	public void RemoveBoat(Player player){
