@@ -2,7 +2,6 @@ package me.Jackpot.BoatMod;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -20,6 +19,7 @@ public class Boat {
 			ArrayList<LocalVector> _vectors;
 			Hashtable<LocalVector, BlockData> _blocks = new Hashtable<LocalVector, BlockData>();
 			Hashtable<LocalVector, BlockData> _breakables = new Hashtable<LocalVector, BlockData>();
+			ArrayList<LocalVector> _air = new ArrayList<LocalVector>();
 			Hashtable<Vector, BlockData> _removed = new Hashtable<Vector, BlockData>();
 			int _size = 0;
 			double lasttheta = 0;
@@ -42,6 +42,7 @@ public class Boat {
 				_vectors = new ArrayList<LocalVector>(_breakables.keySet());
 				_vectors.addAll(_blocks.keySet());
 				FindAir();
+				_vectors.addAll(_air);
 			}
 			
 			public Player getCaptain(){
@@ -134,9 +135,9 @@ public class Boat {
 				return (
 						m == Material.TORCH ||
 						m == Material.LADDER ||
-						m == Material.WOODEN_DOOR ||
-						m == Material.IRON_DOOR ||
-						m == Material.BED_BLOCK ||
+						//m == Material.WOODEN_DOOR ||
+						//m == Material.IRON_DOOR ||
+						//m == Material.BED_BLOCK ||
 						m == Material.CAKE_BLOCK ||
 						m == Material.SIGN ||
 						m == Material.SIGN_POST ||
@@ -253,8 +254,8 @@ public class Boat {
 				}
 				for(int y = miny; y <= maxy; y++){
 					for(int z = minz; z <= maxz; z++){
-						int startx = minx;
-						int lastx = minx;
+						int startx = 0;
+						int lastx = 0;
 						boolean hitblock = false;
 						Material hitfluid = null;
 						for(int x = minx; x <= maxx; x++){
@@ -284,8 +285,7 @@ public class Boat {
 								_removed.put(vec.toReal(_offset, 0), new BlockData(hitfluid));
 							}
 							if(!CheckInBoat(vec)){
-								_vectors.add(vec);
-								_blocks.put(vec, new BlockData(GetBlock(vec, 0)));
+								_air.add(vec);
 							}
 						}
 					}
@@ -305,8 +305,10 @@ public class Boat {
 			private BlockData GetSavedData(LocalVector vec){
 				if(_breakables.containsKey(vec)){
 					return _breakables.get(vec);
-				}else{
+				}else if(_blocks.containsKey(vec)){
 					return _blocks.get(vec);
+				}else{
+					return new BlockData(Material.AIR);
 				}
 			}
 						
@@ -334,6 +336,17 @@ public class Boat {
 					}
 				}
 				return status;
+			}
+			
+			private void PlaceBlocks(Iterator<LocalVector> vectors){
+				while(vectors.hasNext()){
+					LocalVector vec = vectors.next();
+					Vector real = vec.toReal(_offset, lasttheta);
+					if(!_removed.containsKey(real)){
+						_removed.put(real, new BlockData(GetBlock(vec, lasttheta)));
+					}
+					SetBlock(vec, lasttheta, GetSavedData(vec));
+				}
 			}
 						
 			private boolean MoveBlocks(Vector movevec, double theta){
@@ -368,25 +381,13 @@ public class Boat {
 						}
 					}
 					_offset.add(movevec);
-					//place new nonbreakables, gather removed blocks
-					for(Enumeration<LocalVector> vectors = _blocks.keys(); vectors.hasMoreElements();){
-						LocalVector vec = vectors.nextElement();
-						Vector real = vec.toReal(_offset, theta);
-						if(!_removed.containsKey(real)){
-							_removed.put(real, new BlockData(GetBlock(vec, theta)));
-						}
-						SetBlock(vec, theta, _blocks.get(vec));
-					}
-					//place new breakables, gather removed blocks
-					for(Enumeration<LocalVector> vectors = _breakables.keys(); vectors.hasMoreElements();){
-						LocalVector vec = vectors.nextElement();
-						Vector real = vec.toReal(_offset, theta);
-						if(!_removed.containsKey(real)){
-							_removed.put(real, new BlockData(GetBlock(vec, theta)));
-						}
-						SetBlock(vec, theta, _breakables.get(vec));
-					}
 					lasttheta = theta;
+					//place new nonbreakables, gather removed blocks
+					PlaceBlocks(_blocks.keySet().iterator());
+					//place new breakables, gather removed blocks
+					PlaceBlocks(_breakables.keySet().iterator());
+					//place air
+					PlaceBlocks(_air.iterator());
 					return true;
 				}
 				return false;
