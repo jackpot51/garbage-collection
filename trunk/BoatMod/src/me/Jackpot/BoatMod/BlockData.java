@@ -16,13 +16,15 @@ import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 
 public class BlockData{
-	MaterialData _data;
+	Material _type;
+	byte _data;
 	Stack<Object> _extra = new Stack<Object>();
 	public BlockData(Block b){
 		updateData(b);
 	}
 	public BlockData(Material m){
-		_data = new MaterialData(m, (byte) 0);
+		_type = m;
+		_data = (byte) 0;
 	}
 	public static void clearBlock(Block b){
 		if(b.getState() instanceof ContainerBlock){
@@ -57,17 +59,18 @@ public class BlockData{
 		return face;
 	}
 	public void setBlock(Block b, double dtheta){
-		MaterialData md = _data;
-		b.setTypeId(md.getItemTypeId());
+		b.setType(_type);
+		b.setData(_data);
+		BlockState bs = b.getState();
+		MaterialData md = bs.getData();
 		//set rotation
 		if(md instanceof Ladder){
-			((Ladder)md).setFacingDirection(rotate(((Ladder)md).getAttachedFace() ,dtheta));
+			((Ladder)md).setFacingDirection(rotate(((Ladder)md).getAttachedFace(), dtheta));
 		}
 		else if(md instanceof Directional){
 			((Directional)md).setFacingDirection(rotate(((Directional)md).getFacing(), dtheta));
 		}
 		//set extra states
-		BlockState bs = b.getState();
 		if(bs instanceof NoteBlock){
 			((NoteBlock)bs).setRawNote((Byte)_extra.pop());
 		}
@@ -87,8 +90,9 @@ public class BlockData{
 		b.setData(md.getData(), true);
 	}
 	public void updateData(Block b){
+		_type = b.getType();
+		_data = b.getData();
 		BlockState bs = b.getState();
-		_data = bs.getData();
 		//get extra states
 		_extra.clear();
 		if(bs instanceof Sign){
@@ -106,6 +110,6 @@ public class BlockData{
 		}
 	}
 	public Material getType(){
-		return _data.getItemType();
+		return _type;
 	}
 }

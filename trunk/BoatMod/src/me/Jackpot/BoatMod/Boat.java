@@ -135,9 +135,6 @@ public class Boat {
 				return (
 						m == Material.TORCH ||
 						m == Material.LADDER ||
-						//m == Material.WOODEN_DOOR ||
-						//m == Material.IRON_DOOR ||
-						//m == Material.BED_BLOCK ||
 						m == Material.CAKE_BLOCK ||
 						m == Material.SIGN ||
 						m == Material.SIGN_POST ||
@@ -225,6 +222,8 @@ public class Boat {
 			}
 			
 			private void FindAir(){
+				_vectors.removeAll(_air);
+				_air.clear();
 				int minx = 0;
 				int maxx = 0;
 				int miny = 0;
@@ -254,8 +253,8 @@ public class Boat {
 				}
 				for(int y = miny; y <= maxy; y++){
 					for(int z = minz; z <= maxz; z++){
-						int startx = 0;
-						int lastx = 0;
+						int startx = minx;
+						int lastx = minx-1;
 						boolean hitblock = false;
 						Material hitfluid = null;
 						for(int x = minx; x <= maxx; x++){
@@ -338,14 +337,14 @@ public class Boat {
 				return status;
 			}
 			
-			private void PlaceBlocks(Iterator<LocalVector> vectors){
+			private void PlaceBlocks(Iterator<LocalVector> vectors, double theta){
 				while(vectors.hasNext()){
 					LocalVector vec = vectors.next();
-					Vector real = vec.toReal(_offset, lasttheta);
+					Vector real = vec.toReal(_offset, theta);
 					if(!_removed.containsKey(real)){
-						_removed.put(real, new BlockData(GetBlock(vec, lasttheta)));
+						_removed.put(real, new BlockData(GetBlock(vec, theta)));
 					}
-					SetBlock(vec, lasttheta, GetSavedData(vec));
+					SetBlock(vec, theta, GetSavedData(vec));
 				}
 			}
 						
@@ -381,13 +380,13 @@ public class Boat {
 						}
 					}
 					_offset.add(movevec);
-					lasttheta = theta;
-					//place new nonbreakables, gather removed blocks
-					PlaceBlocks(_blocks.keySet().iterator());
-					//place new breakables, gather removed blocks
-					PlaceBlocks(_breakables.keySet().iterator());
 					//place air
-					PlaceBlocks(_air.iterator());
+					PlaceBlocks(_air.iterator(), theta);
+					//place new nonbreakables, gather removed blocks
+					PlaceBlocks(_blocks.keySet().iterator(), theta);
+					//place new breakables, gather removed blocks
+					PlaceBlocks(_breakables.keySet().iterator(), theta);
+					lasttheta = theta;
 					return true;
 				}
 				return false;
