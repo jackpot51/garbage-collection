@@ -119,33 +119,20 @@ public class Boat {
 				}
 				return vec;
 			}
+			
+			EnumSet<Material> fluids = EnumSet.of(Material.AIR, Material.WATER, Material.STATIONARY_WATER, Material.LAVA, Material.STATIONARY_LAVA);
 						
 			private boolean CheckFluid(Material m){
-				return (
-						m == Material.AIR ||
-						m == Material.WATER ||
-						m == Material.STATIONARY_WATER ||
-						m == Material.LAVA ||
-						m == Material.STATIONARY_LAVA
-						);
+				return fluids.contains(m);
 			}
 			
-			private boolean CheckBreakable(Block b){
-				Material m = b.getType();
-				return (
-						m == Material.TORCH ||
-						m == Material.LADDER ||
-						m == Material.CAKE_BLOCK ||
-						m == Material.SIGN ||
-						m == Material.SIGN_POST ||
-						m == Material.WALL_SIGN ||
-						m == Material.TRAP_DOOR ||
-						m == Material.LEVER ||
-						m == Material.REDSTONE_WIRE ||
-						m == Material.REDSTONE_TORCH_OFF ||
-						m == Material.REDSTONE_TORCH_ON ||
-						m == Material.STONE_BUTTON
-						);
+			EnumSet<Material> breakable = EnumSet.of(Material.TORCH, Material.LADDER, Material.CAKE_BLOCK, Material.SIGN,
+													Material.SIGN_POST, Material.WALL_SIGN, Material.TRAP_DOOR, Material.LEVER,
+													Material.REDSTONE_WIRE, Material.REDSTONE_TORCH_OFF, Material.REDSTONE_TORCH_ON,
+													Material.STONE_BUTTON);
+			
+			private boolean CheckBreakable(Material m){
+				return breakable.contains(m);
 			}
 			
 			private boolean CheckInBoatInit(LocalVector vec){
@@ -181,7 +168,7 @@ public class Boat {
 								}
 							}
 					*/		
-							if(CheckBreakable(b)){
+							if(CheckBreakable(b.getType())){
 								_breakables.put(vec, bd);
 							}else{
 								_blocks.put(vec, bd);
@@ -261,14 +248,12 @@ public class Boat {
 							LocalVector vec = new LocalVector(new Vector(x, y, z));
 							if(CheckInBoat(vec)){
 								if(hitfluid == null){
-									if(CheckSurrounding(Material.WATER, vec)){
-										hitfluid = Material.WATER;
-									}else if(CheckSurrounding(Material.STATIONARY_WATER, vec)){
-										hitfluid = Material.STATIONARY_WATER;
-									}else if(CheckSurrounding(Material.LAVA, vec)){
-										hitfluid = Material.LAVA;
-									}else if(CheckSurrounding(Material.STATIONARY_LAVA, vec)){
-										hitfluid = Material.STATIONARY_LAVA;
+									for(Iterator<Material> materials = fluids.iterator(); materials.hasNext();){
+										Material m = materials.next();
+										if(CheckSurrounding(m, vec)){
+											hitfluid = m;
+											break;
+										}
 									}
 								}
 								if(!hitblock){
