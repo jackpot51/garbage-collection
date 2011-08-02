@@ -32,7 +32,7 @@ public class Boat {
 			
 			public Boat(Block controlblock, Player captain){
 				_offset = controlblock.getLocation().toVector();
-				_dir = GetCompassDirection(captain.getLocation().getDirection());
+				_dir = GetCompassDirection(captain.getLocation().getDirection(), 0.5);
 				_world = controlblock.getWorld();
 				_captain = captain;
 				_maxsize = BoatMod.plugin.MaxBoatSize(captain);
@@ -54,7 +54,7 @@ public class Boat {
 			}
 			
 			public void ChangeSpeed(int movespeed){
-				if(_movespeed > 0 && _movespeed < BoatMod.plugin.MaxBoatSpeed(_captain) ){
+				if(_movespeed > 0 && _movespeed <= BoatMod.plugin.MaxBoatSpeed(_captain) ){
 					_movespeed = movespeed;
 					Message("Moving " + _movespeed + " block" + (movespeed>1?"s":"") + " per click.");
 				}
@@ -65,7 +65,7 @@ public class Boat {
 			}
 			
 			public boolean Move(Vector dir){
-				Vector vec = GetCompassDirection(dir);
+				Vector vec = GetCompassDirection(dir, 0.75);
 				if(vec.length() == 1){
 					for(int i = 0; i < _movespeed; i++){ //it has to be done this way to keep water intact and properly collide
 						if(!MoveBlocks(vec, lasttheta)){
@@ -79,7 +79,7 @@ public class Boat {
 			}
 			
 			public boolean Rotate(Vector dir){
-				Vector vec = GetCompassDirection(dir);
+				Vector vec = GetCompassDirection(dir, 0.5);
 				if(vec.length() == 1){
 					double theta = 0;
 					Vector cross = _dir.clone().crossProduct(vec);
@@ -95,26 +95,26 @@ public class Boat {
 				return false;
 			}
 			
-			private Vector GetCompassDirection(Vector dir){
+			private Vector GetCompassDirection(Vector dir, double zone){
 				Vector vec = new Vector(0,0,0);
-				if(dir.getX() > 0.75){
+				if(dir.getX() > zone){
 					vec.setX(1);
 				}
-				if(dir.getX() < -0.75){
+				if(dir.getX() < -zone){
 					vec.setX(-1);
 				}
 
-				if(dir.getY() > 0.75){
+				if(dir.getY() > zone){
 					vec.setY(1);
 				}
-				if(dir.getY() < -0.75){
+				if(dir.getY() < -zone){
 					vec.setY(-1);
 				}
 
-				if(dir.getZ() > 0.75){
+				if(dir.getZ() > zone){
 					vec.setZ(1);
 				}
-				if(dir.getZ() < -0.75){
+				if(dir.getZ() < -zone){
 					vec.setZ(-1);
 				}
 				return vec;
@@ -128,12 +128,18 @@ public class Boat {
 			
 			EnumSet<Material> breakable = EnumSet.of(Material.TORCH, Material.LADDER, Material.CAKE_BLOCK, Material.SIGN,
 													Material.SIGN_POST, Material.WALL_SIGN, Material.TRAP_DOOR, Material.LEVER,
-													//Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK, Material.BED_BLOCK,
+													//Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK, Material.BED_BLOCK, Material.IRON_DOOR,
 													Material.REDSTONE_WIRE, Material.REDSTONE_TORCH_OFF, Material.REDSTONE_TORCH_ON,
 													Material.STONE_BUTTON);
 			
 			private boolean CheckBreakable(Material m){
 				return breakable.contains(m);
+			}
+			
+			private boolean CheckDouble(Material m){
+				return (m == Material.BED_BLOCK ||
+						m == Material.WOODEN_DOOR ||
+						m == Material.IRON_DOOR);
 			}
 			
 			private boolean CheckInBoatInit(LocalVector vec){
@@ -148,28 +154,16 @@ public class Boat {
 			}
 			
 			private LocalVector FindBlocks(Block b, boolean recurse){
-				LocalVector vec = new LocalVector(b.getLocation().toVector(), _offset, 0);
-				if(!CheckInBoatInit(vec) && !_removed.containsKey(vec.toReal(_offset, 0))){
+				Vector real = b.getLocation().toVector();
+				LocalVector vec = new LocalVector(real, _offset, 0);
+				if(!CheckInBoatInit(vec) && !_removed.containsKey(real)){
 					BlockData bd = new BlockData(b);
 					if(BoatMod.plugin.CheckBoatable(b.getType())){
 						if(_size < _maxsize){
 							//handle special double blocks
-							
-					/*		if(recurse && b.getType() == Material.BED_BLOCK){
-								Bed bed = (Bed)b.getState().getData();
-								if(bed.isHeadOfBed()){
-									LocalVector vec2 = new LocalVector(b.getFace(bed.getFacing().getOppositeFace()).getLocation().toVector(), _offset, 0);
-									if(_breakables.containsKey(vec2)){
-										_breakables.remove(vec2);
-									}
-								}else{
-									if(FindBlocks(b.getFace(bed.getFacing()), false) == null){
-										return null;
-									}
-								}
-							}
-					*/		
-							if(CheckBreakable(b.getType())){
+							if(CheckDouble(b.getType())){
+								_breakables.put(vec, bd);
+							}else if(CheckBreakable(b.getType())){
 								_breakables.put(vec, bd);
 							}else{
 								_blocks.put(vec, bd);
@@ -191,8 +185,6 @@ public class Boat {
 						}else{
 							return null;
 						}
-					}else{
-						_removed.put(vec.toReal(_offset, 0), bd);
 					}
 				}
 				return vec;
@@ -353,7 +345,7 @@ public class Boat {
 					List<Entity> entities = _world.getEntities();
 					for(int i = 0; i < entities.size(); i++){
 						Location entityloc = entities.get(i).getLocation().clone();
-						Vector entityreal = entityloc.getBlock().getFace(BlockFace.DOWN).getLocation().toVector();
+						Vector entityreal = entityloc.getBlock().getRelative(BlockFace.DOWN).getLocation().toVector();
 						LocalVector entitylocal = new LocalVector(entityreal, _offset, lasttheta); 
 						if(_blocks.containsKey(entitylocal)){
 							Vector entitynext = entitylocal.toReal(_offset, theta);

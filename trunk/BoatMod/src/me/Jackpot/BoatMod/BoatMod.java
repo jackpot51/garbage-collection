@@ -143,7 +143,10 @@ public class BoatMod extends JavaPlugin {
 						LogMessage("Data file: " + file.getPath());
 						BufferedReader br = new BufferedReader(new FileReader(file));
 						DataType dt = DataType.UNKNOWN;
+						int linenum = 0;
 						while(br.ready()){
+							boolean error = false;
+							linenum++;
 							String line = br.readLine().trim();
 							if(line.startsWith("[") && line.endsWith("]")){
 								line = line.replace("[", "");
@@ -161,19 +164,19 @@ public class BoatMod extends JavaPlugin {
 										}
 										String configname = line.substring(0, line.indexOf("=", 0));
 										String configvalue = line.substring(line.indexOf("=", 0)+1);
-										if(!config.containsKey(configgroup)){
-											config.put(configgroup, new Hashtable<String, String>());
+										if(!config.containsKey(configname)){
+											config.put(configname, new Hashtable<String, String>());
 										}
-										config.get(configgroup).put(configname, configvalue);
+										config.get(configname).put(configgroup, configvalue);
 									}else{
-										LogMessage("Config data error: " + line);
+										error=true;
 									}
 									break;
 								case MATERIAL:
-									if(Material.valueOf(line.toUpperCase()) != null){
-										boatable.add(Material.valueOf(line));
+									if(Material.getMaterial(line) != null){
+										boatable.add(Material.getMaterial(line));
 									}else{
-										LogMessage("Material data error: " + line);
+										error=true;
 									}
 									break;
 								case SCRIPT:
@@ -185,6 +188,10 @@ public class BoatMod extends JavaPlugin {
 										scripts.put(scriptname, new Script(permission, ""));
 									}
 									break;
+							}
+							if(error){
+								LogMessage("ERROR in file " + name + ", section [" + dt.name() + "]");
+								LogMessage("Line " + linenum + ": " + line);
 							}
 						}
 						br.close();
@@ -211,12 +218,12 @@ public class BoatMod extends JavaPlugin {
 	}
 	
 	public String GetConfig(Player player, String configname){
-		String configvalue = config.get("").get(configname);
+		String configvalue = config.get(configname).get("");
 		if(permissionHandler != null){
-			for(Enumeration<String> configgroups = config.keys(); configgroups.hasMoreElements();){
+			for(Enumeration<String> configgroups = config.get(configname).keys(); configgroups.hasMoreElements();){
 				String configgroup = configgroups.nextElement();
 				if(configgroup != "" && permissionHandler.permission(player, configgroup)){
-					configvalue = config.get(configgroup).get(configname);
+					configvalue = config.get(configname).get(configgroup);
 				}
 			}
 		}

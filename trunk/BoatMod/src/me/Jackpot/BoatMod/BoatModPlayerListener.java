@@ -17,14 +17,14 @@ public class BoatModPlayerListener extends PlayerListener{
 	
 	public void onPlayerInteract(PlayerInteractEvent event){
 		Player player = event.getPlayer();
-		if(event.getMaterial() == Material.BOAT){
+		if(event.getMaterial() == Material.getMaterial(plugin.GetConfig(player, "SetTool"))){
 			if(event.getAction() == Action.LEFT_CLICK_BLOCK){
 				plugin.AddBoat(player, event.getClickedBlock());
 			}else if(event.getAction() == Action.LEFT_CLICK_AIR){
 				plugin.RemoveBoat(player);
 			}
 		}
-		else if(event.getMaterial() == Material.MAP){
+		if(event.getMaterial() == Material.getMaterial(plugin.GetConfig(player, "MoveTool"))){
 			if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK){
 				plugin.MoveBoat(player);
 			}
