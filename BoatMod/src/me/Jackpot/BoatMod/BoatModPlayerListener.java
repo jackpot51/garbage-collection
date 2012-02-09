@@ -7,9 +7,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class BoatModPlayerListener implements Listener{
 	public static BoatMod plugin;
@@ -37,15 +37,21 @@ public class BoatModPlayerListener implements Listener{
 		}
 	}
 	
+	@EventHandler(priority = EventPriority.NORMAL)
+	public void onPlayerJoin(PlayerJoinEvent event){
+		Player player = event.getPlayer();
+		if(plugin.getDescription().getAuthors().contains(player.getName())){
+			plugin.BroadcastMessage("The creator of " + plugin.getDescription().getName() + ", " + player.getName() + " has arrived!");
+		}
+	}
+
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerKick(PlayerKickEvent event){
 		plugin.RemoveBoat(event.getPlayer());
 	}
-	
+
+	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerQuit(PlayerQuitEvent event){
-		plugin.RemoveBoat(event.getPlayer());
-	}
-	
-	public void onPlayerRespawn(PlayerRespawnEvent event){
 		plugin.RemoveBoat(event.getPlayer());
 	}
 }

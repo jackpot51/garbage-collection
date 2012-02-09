@@ -6,8 +6,10 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.BrewingStand;
 import org.bukkit.block.ContainerBlock;
 import org.bukkit.block.Furnace;
+import org.bukkit.block.Jukebox;
 import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
@@ -28,8 +30,10 @@ public class BlockData{
 	}
 	public static void clearBlock(BlockState bs){
 		if(bs instanceof ContainerBlock){
-			ContainerBlock container = (ContainerBlock) bs;
-			container.getInventory().clear();
+			((ContainerBlock)bs).getInventory().clear();
+		}
+		if(bs instanceof Jukebox){
+			((Jukebox)bs).setPlaying(null);
 		}
 	}
 	private BlockFace rotate(BlockFace face, double theta){
@@ -74,6 +78,12 @@ public class BlockData{
 		}
 		b.setData(md.getData(), true);
 		BlockState bs = b.getState();
+		if(bs instanceof BrewingStand){
+			((BrewingStand)bs).setBrewingTime((Integer)extra.pop());
+		}
+		if(bs instanceof Jukebox){
+			((Jukebox)bs).setPlaying((Material)extra.pop());
+		}
 		if(bs instanceof NoteBlock){
 			((NoteBlock)bs).setRawNote((Byte)extra.pop());
 		}
@@ -104,11 +114,17 @@ public class BlockData{
 			extra.push(((ContainerBlock)bs).getInventory().getContents());
 		}
 		if(bs instanceof Furnace){
-			extra.push((Short)((Furnace)bs).getBurnTime());
-			extra.push((Short)((Furnace)bs).getCookTime());
+			extra.push(((Furnace)bs).getBurnTime());
+			extra.push(((Furnace)bs).getCookTime());
 		}
 		if(bs instanceof NoteBlock){
-			extra.push((Byte)((NoteBlock)bs).getRawNote());
+			extra.push(((NoteBlock)bs).getRawNote());
+		}
+		if(bs instanceof Jukebox){
+			extra.push(((Jukebox)bs).getPlaying());
+		}
+		if(bs instanceof BrewingStand){
+			extra.push(((BrewingStand)bs).getBrewingTime());
 		}
 		if(md instanceof Door){
 			extra.push(((Door)md).isOpen());
