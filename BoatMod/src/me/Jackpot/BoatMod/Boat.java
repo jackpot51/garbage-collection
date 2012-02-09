@@ -13,6 +13,9 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.material.Bed;
+import org.bukkit.material.Door;
+import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
 public class Boat {
@@ -128,18 +131,11 @@ public class Boat {
 			
 			EnumSet<Material> breakable = EnumSet.of(Material.TORCH, Material.LADDER, Material.CAKE_BLOCK, Material.SIGN,
 													Material.SIGN_POST, Material.WALL_SIGN, Material.TRAP_DOOR, Material.LEVER,
-													//Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK, Material.BED_BLOCK, Material.IRON_DOOR,
 													Material.REDSTONE_WIRE, Material.REDSTONE_TORCH_OFF, Material.REDSTONE_TORCH_ON,
 													Material.STONE_BUTTON);
 			
 			private boolean CheckBreakable(Material m){
 				return breakable.contains(m);
-			}
-			
-			private boolean CheckDouble(Material m){
-				return (m == Material.BED_BLOCK ||
-						m == Material.WOODEN_DOOR ||
-						m == Material.IRON_DOOR);
 			}
 			
 			private boolean CheckInBoatInit(LocalVector vec){
@@ -157,13 +153,30 @@ public class Boat {
 				Vector real = b.getLocation().toVector();
 				LocalVector vec = new LocalVector(real, _offset, 0);
 				if(!CheckInBoatInit(vec) && !_removed.containsKey(real)){
-					BlockData bd = new BlockData(b);
-					if(BoatMod.plugin.CheckBoatable(b.getType())){
+					BlockData bd = new BlockData(b.getState());
+					if(BoatMod.plugin.CheckBoatable(bd.getType())){
 						if(_size < _maxsize){
-							//handle special double blocks
-							if(CheckDouble(b.getType())){
-								_breakables.put(vec, bd);
-							}else if(CheckBreakable(b.getType())){
+							if(bd.md instanceof Door){
+								Door door = (Door)bd.md;
+								if(door.isTopHalf()){
+									_breakables.put(vec, bd);
+									if(FindBlocks(b.getRelative(BlockFace.DOWN), false) == null){
+										return null;
+									}
+								}else if(!recurse){
+									_breakables.put(vec, bd);
+								}
+							}else if(bd.md instanceof Bed){
+								Bed bed = (Bed)bd.md;
+								if(bed.isHeadOfBed()){
+									_breakables.put(vec, bd);
+									if(FindBlocks(b.getRelative(bed.getFacing()), false) == null){
+										return null;
+									}
+								}else if(!recurse){
+									_breakables.put(vec, bd);
+								}
+							}else if(CheckBreakable(bd.getType())){
 								_breakables.put(vec, bd);
 							}else{
 								_blocks.put(vec, bd);
@@ -171,7 +184,7 @@ public class Boat {
 							_size++;
 							if(recurse){
 								for(int x = -1; x <= 1; x++){
-									for(int y = -1; y <= 1; y++){
+									for(int y = -1; y <= 1; y++ ){
 										for(int z = -1; z <= 1; z++){
 											if(x != 0 || y != 0 || z != 0){
 												if(FindBlocks(b.getRelative(x, y, z), true) == null){
@@ -259,7 +272,7 @@ public class Boat {
 						for(int x = startx; x <= lastx; x++){
 							LocalVector vec = new LocalVector(new Vector(x, y, z));
 							if(hitfluid != null){
-								_removed.put(vec.toReal(_offset, 0), new BlockData(hitfluid));
+								_removed.put(vec.toReal(_offset, 0), new BlockData(new MaterialData(hitfluid)));
 							}
 							if(!CheckInBoat(vec)){
 								_air.add(vec);
@@ -285,7 +298,7 @@ public class Boat {
 				}else if(_blocks.containsKey(vec)){
 					return _blocks.get(vec);
 				}else{
-					return new BlockData(Material.AIR);
+					return new BlockData();
 				}
 			}
 						
@@ -305,7 +318,7 @@ public class Boat {
 					if(current.getType() != bd.getType()){
 						status.add(BoatStatus.CHANGED);
 					}
-					bd.updateData(current);
+					bd.updateData(current.getState());
 					Block next = GetBlock(vec, theta).getRelative(x, y, z);
 					LocalVector nextvec = new LocalVector(next.getLocation().toVector(), _offset, lasttheta);
 					if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
@@ -320,7 +333,7 @@ public class Boat {
 					LocalVector vec = vectors.next();
 					Vector real = vec.toReal(_offset, theta);
 					if(!_removed.containsKey(real)){
-						_removed.put(real, new BlockData(GetBlock(vec, theta)));
+						_removed.put(real, new BlockData(GetBlock(vec, theta).getState()));
 					}
 					SetBlock(vec, theta, GetSavedData(vec));
 				}
@@ -332,13 +345,13 @@ public class Boat {
 					//clear old starting with breakables, replace removed blocks
 					for(Iterator<LocalVector> vectors = _vectors.iterator(); vectors.hasNext();){
 						LocalVector vec = vectors.next();
-						BlockData.clearBlock(GetBlock(vec, lasttheta));
+						BlockData.clearBlock(GetBlock(vec, lasttheta).getState());
 						Vector real = vec.toReal(_offset, lasttheta);
 						if(_removed.containsKey(real)){
 							SetBlock(vec, lasttheta, _removed.get(real));
 							_removed.remove(real);
 						}else{
-							SetBlock(vec, lasttheta, new BlockData(Material.AIR));
+							SetBlock(vec, lasttheta, new BlockData());
 						}
 					}
 					//teleport entities

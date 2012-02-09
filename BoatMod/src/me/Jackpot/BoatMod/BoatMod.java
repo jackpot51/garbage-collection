@@ -15,13 +15,12 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
-import org.bukkit.plugin.Plugin;
 
 public class BoatMod extends JavaPlugin {
 	public static BoatMod plugin;
@@ -51,16 +50,13 @@ public class BoatMod extends JavaPlugin {
 		scriptboats = new Hashtable<Player, Thread>();
 		ReadFile(new File("plugins/" + name));
 		setupPermissions();
-		PluginManager pm = this.getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.Highest, this);
-		pm.registerEvent(Event.Type.PLAYER_KICK, playerListener, Event.Priority.Normal, this);
-		pm.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Event.Priority.Normal, this);
-		pm.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Event.Priority.Normal, this);
-		LogMessage("Version " + this.getDescription().getVersion() + " has been enabled.");
+		PluginManager pm = getServer().getPluginManager();
+		pm.registerEvents(playerListener, this);
+		LogMessage("Version " + getDescription().getVersion() + " has been enabled.");
 	}
 	
 	public void setupPermissions(){
-		Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
+		Plugin permissionsPlugin = getServer().getPluginManager().getPlugin("Permissions");
 		if(permissionHandler == null){
 			if(permissionsPlugin != null){
 				permissionHandler = ((Permissions) permissionsPlugin).getHandler();
@@ -96,7 +92,7 @@ public class BoatMod extends JavaPlugin {
 			else if(cmd.getName().equalsIgnoreCase("boatspeed")){
 				if(args.length == 1){
 					Integer newspeed = Integer.parseInt(args[0]);
-					if(newspeed > 0 && newspeed < MaxBoatSpeed(player)){
+					if(newspeed > 0 && newspeed <= MaxBoatSpeed(player)){
 						Boat boat = getBoat(player);
 						if(boat != null){
 							boat.ChangeSpeed(newspeed);
@@ -154,20 +150,20 @@ public class BoatMod extends JavaPlugin {
 								dt = DataType.valueOf(line.toUpperCase());
 								continue;
 							}
+							String permission = "";
+							if(line.indexOf(":") > 0){
+								permission = line.substring(0, line.indexOf(":"));
+								line = line.substring(line.indexOf(":")+1);
+							}
 							switch(dt){
 								case CONFIG:
 									if(line.indexOf("=") > 0){
-										String configgroup = "";
-										if(line.indexOf(":") > 0){ 
-											configgroup = line.substring(0, line.indexOf(":"));
-											line = line.substring(line.indexOf(":")+1);
-										}
 										String configname = line.substring(0, line.indexOf("=", 0));
 										String configvalue = line.substring(line.indexOf("=", 0)+1);
 										if(!config.containsKey(configname)){
 											config.put(configname, new Hashtable<String, String>());
 										}
-										config.get(configname).put(configgroup, configvalue);
+										config.get(configname).put(permission, configvalue);
 									}else{
 										error=true;
 									}
@@ -176,16 +172,18 @@ public class BoatMod extends JavaPlugin {
 									if(Material.getMaterial(line) != null){
 										boatable.add(Material.getMaterial(line));
 									}else{
-										error=true;
+										try{
+											boatable.add(Material.getMaterial(Integer.parseInt(line)));
+										}catch(NumberFormatException ex){
+											error=true;
+										}
 									}
 									break;
 								case SCRIPT:
-									String scriptname = line.substring(line.indexOf(":")+1);
-									String permission = line.substring(0,line.indexOf(":"));
-									if(scripts.containsKey(scriptname)){
-										scripts.get(scriptname)._permission = permission;
+									if(scripts.containsKey(line)){
+										scripts.get(line)._permission = permission;
 									}else{
-										scripts.put(scriptname, new Script(permission, ""));
+										scripts.put(line, new Script(permission, ""));
 									}
 									break;
 							}
@@ -206,7 +204,7 @@ public class BoatMod extends JavaPlugin {
 	}
 	
 	public void Message(Player player, String message){
-		player.sendMessage("§2[" + name + "] §c" + message);
+		player.sendMessage("[" + name + "] " + message);
 	}
 	
 	private Boat getBoat(Player captain){
