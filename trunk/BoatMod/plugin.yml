@@ -1,7 +1,14 @@
 name: BoatMod
 main: me.Jackpot.BoatMod.BoatMod
-version: 7
+version: 8
+author: jackpot51
 commands:
+   boatauto:
+      description: This command allows you to autopilot a boat.
+      usage: /boatauto [start or stop]
+   boatinfo:
+      description: This command gives information about BoatMod.
+      usage: /boatinfo
    boatscript:
       description: This command controls BoatMod's script engine.
       usage: /boatscript [script name]

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="MacRoman" standalone="no"?>
+<jardesc>
+    <jar path="/Users/jackpot/Projects/garbage-collection/bukkit/plugins/BoatMod.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/BoatMod/BoatMod.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{BoatModPlayerListener.java"/>
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{ScriptBoat.java"/>
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{AutoPilot.java"/>
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{LocalVector.java"/>
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{Script.java"/>
+        <file path="/BoatMod/plugin.yml"/>
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{BoatMod.java"/>
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{BlockData.java"/>
+        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{Boat.java"/>
+    </selectedElements>
+</jardesc>

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.logging.Logger;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -23,32 +22,35 @@ import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
 
 public class BoatMod extends JavaPlugin {
-	public static BoatMod plugin;
-	String name;
 	Hashtable<String, Hashtable<String,String>> config;
 	ArrayList<Material> boatable;
 	Hashtable<String, Script> scripts;
 	Hashtable<Player, Script> scriptselect;
 	Hashtable<Player, Boat> boats;
 	Hashtable<Player, Thread> scriptboats;
-	Logger log = Logger.getLogger("Minecraft");
 	private final BoatModPlayerListener playerListener = new BoatModPlayerListener(this);
 	public static PermissionHandler permissionHandler;
 	
+	public void BroadcastMessage(String msg){
+		getServer().broadcastMessage("[" + getDescription().getName() + "] " + msg);
+	}
+	
+	public void Message(CommandSender player, String msg){
+		player.sendMessage("[" + getDescription().getName() + "] " + msg);
+	}
+
 	public void LogMessage(String msg){
-		log.info("[" + name + "] " + msg);
+		Message(getServer().getConsoleSender(), msg);
 	}
 	
 	public void onEnable(){
-		plugin = this;
-		name = getDescription().getName();
 		config = new Hashtable<String, Hashtable<String, String>>();
 		boatable = new ArrayList<Material>();
 		scripts = new Hashtable<String, Script>();
 		scriptselect = new Hashtable<Player, Script>();
 		boats = new Hashtable<Player, Boat>();
 		scriptboats = new Hashtable<Player, Thread>();
-		ReadFile(new File("plugins/" + name));
+		ReadFile(new File("plugins/" + getDescription().getName()));
 		setupPermissions();
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(playerListener, this);
@@ -71,13 +73,31 @@ public class BoatMod extends JavaPlugin {
 			RemoveBoat(players.nextElement());
 		}
 		LogMessage("Successfully disabled.");
-		plugin = null;
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
 		if(sender instanceof Player){
 			Player player = (Player)sender;
-			if(cmd.getName().equalsIgnoreCase("boatscript")){
+			if(cmd.getName().equalsIgnoreCase("boatauto")){
+				if(args.length == 1){
+					Boat boat = getBoat(player);
+					if(args[0].equalsIgnoreCase("start")){
+						if(boat != null){
+							boat._autopilot.set(true);
+							Message(player, "Autopilot started.");
+						}
+					}else if(args[0].equalsIgnoreCase("stop")){
+						if(boat != null){
+							boat._autopilot.set(false);
+							Message(player, "Autopilot stopped.");
+						}
+					}else{
+						Message(player, "You must supply start or stop as an argument.");
+					}
+					return true;
+				}
+			}
+			else if(cmd.getName().equalsIgnoreCase("boatscript")){
 				if(args.length == 1 && scripts.containsKey(args[0])){
 					Script script = scripts.get(args[0]);
 					if(permissionHandler != null && (script.isValid() || permissionHandler.permission(player, script._permission))){
@@ -103,6 +123,14 @@ public class BoatMod extends JavaPlugin {
 					return true;
 				}
 			}
+		}else if(cmd.getName().equalsIgnoreCase("boatinfo")){
+			if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
+				Message(sender, "This server is running " + getDescription().getName() + " v" + getDescription().getVersion());
+				Message(sender, "There are currently " + boats.size() + " boats");
+			}else{
+				Message(sender, "Only operators may use this command.");
+			}
+			return true;
 		}else{
 			LogMessage("Only players may use the " + cmd.getName() + " command.");
 		}
@@ -203,10 +231,6 @@ public class BoatMod extends JavaPlugin {
 		}
 	}
 	
-	public void Message(Player player, String message){
-		player.sendMessage("[" + name + "] " + message);
-	}
-	
 	private Boat getBoat(Player captain){
 		if(boats.containsKey(captain)){
 			return boats.get(captain);
@@ -243,6 +267,7 @@ public class BoatMod extends JavaPlugin {
 	public void AddBoat(Player player, Block block){
 		Boat boat = getBoat(player);
 		if(boat != null){
+			boat._autopilot.set(false);
 			boats.remove(player);
 		}
 		if(scriptboats.containsKey(player)){
@@ -251,13 +276,13 @@ public class BoatMod extends JavaPlugin {
 			scriptboats.remove(player);
 		}
 		if(scriptselect.containsKey(player)){
-			ScriptBoat sboat = new ScriptBoat(block, player, scripts.get(scriptselect.get(player)));
+			ScriptBoat sboat = new ScriptBoat(block, player, scripts.get(scriptselect.get(player)), this);
 			Thread boatthread = new Thread(sboat);
 			scriptboats.put(player, boatthread);
 			boatthread.start();
 			boat = sboat;
 		}else{
-			boat = new Boat(block, player);
+			boat = new Boat(block, player, this);
 			boats.put(player, boat);
 			Message(player, "You now have control of " + (boat._size) + " blocks.");
 		}
@@ -267,6 +292,7 @@ public class BoatMod extends JavaPlugin {
 	public void RemoveBoat(Player player){
 		Boat boat = getBoat(player);
 		if(boat != null){
+			boat._autopilot.set(false);
 			boats.remove(player);
 			Message(player, "Your boat has been deboated.");
 			LogMessage(player.getDisplayName() + "'s boat was removed.");
