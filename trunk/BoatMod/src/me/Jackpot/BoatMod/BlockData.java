@@ -12,23 +12,23 @@ import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Directional;
+import org.bukkit.material.Door;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
 
 public class BlockData{
-	Material _type;
-	byte _data;
-	Stack<Object> _extra = new Stack<Object>();
-	public BlockData(Block b){
-		updateData(b);
+	MaterialData md = new MaterialData(Material.AIR);
+	Stack<Object> extra = new Stack<Object>();
+	public BlockData(){}
+	public BlockData(BlockState bs){
+		updateData(bs);
 	}
-	public BlockData(Material m){
-		_type = m;
-		_data = (byte) 0;
+	public BlockData(MaterialData newmd){
+		md = newmd;
 	}
-	public static void clearBlock(Block b){
-		if(b.getState() instanceof ContainerBlock){
-			ContainerBlock container = (ContainerBlock) b.getState();
+	public static void clearBlock(BlockState bs){
+		if(bs instanceof ContainerBlock){
+			ContainerBlock container = (ContainerBlock) bs;
 			container.getInventory().clear();
 		}
 	}
@@ -59,57 +59,63 @@ public class BlockData{
 		return face;
 	}
 	public void setBlock(Block b, double dtheta){
-		b.setType(_type);
-		b.setData(_data);
-		BlockState bs = b.getState();
-		MaterialData md = bs.getData();
+		b.setType(md.getItemType());
 		//set rotation
 		if(md instanceof Ladder){
 			((Ladder)md).setFacingDirection(rotate(((Ladder)md).getAttachedFace(), dtheta));
-		}
-		else if(md instanceof Directional){
+		}else if(md instanceof Directional){
 			((Directional)md).setFacingDirection(rotate(((Directional)md).getFacing(), dtheta));
 		}
+		
 		//set extra states
+		if(md instanceof Door){
+			((Door)md).setTopHalf((Boolean)extra.pop());
+			((Door)md).setOpen((Boolean)extra.pop());
+		}
+		b.setData(md.getData(), true);
+		BlockState bs = b.getState();
 		if(bs instanceof NoteBlock){
-			((NoteBlock)bs).setRawNote((Byte)_extra.pop());
+			((NoteBlock)bs).setRawNote((Byte)extra.pop());
 		}
 		if(bs instanceof Furnace){
-			((Furnace)bs).setBurnTime((Short)_extra.pop());
-			((Furnace)bs).setCookTime((Short)_extra.pop());
+			((Furnace)bs).setBurnTime((Short)extra.pop());
+			((Furnace)bs).setCookTime((Short)extra.pop());
 		}
 		if(bs instanceof ContainerBlock){
-			((ContainerBlock)bs).getInventory().setContents((ItemStack[])_extra.pop());
+			((ContainerBlock)bs).getInventory().setContents((ItemStack[])extra.pop());
 		}
 		if(bs instanceof Sign){
-			String lines[] = (String[]) _extra.pop();
+			String lines[] = (String[]) extra.pop();
 			for(int i = 0; i < lines.length; i++){
 				((Sign)bs).setLine(i, lines[i]);
 			}
 		}
-		b.setData(md.getData(), true);
+
+		bs.update(true);
 	}
-	public void updateData(Block b){
-		_type = b.getType();
-		_data = b.getData();
-		BlockState bs = b.getState();
+	public void updateData(BlockState bs){
+		md = bs.getData();
 		//get extra states
-		_extra.clear();
+		extra.clear();
 		if(bs instanceof Sign){
-			_extra.push(((Sign)bs).getLines());
+			extra.push(((Sign)bs).getLines());
 		}
 		if(bs instanceof ContainerBlock){
-			_extra.push(((ContainerBlock)bs).getInventory().getContents());
+			extra.push(((ContainerBlock)bs).getInventory().getContents());
 		}
 		if(bs instanceof Furnace){
-			_extra.push((Short)((Furnace)bs).getBurnTime());
-			_extra.push((Short)((Furnace)bs).getCookTime());
+			extra.push((Short)((Furnace)bs).getBurnTime());
+			extra.push((Short)((Furnace)bs).getCookTime());
 		}
 		if(bs instanceof NoteBlock){
-			_extra.push((Byte)((NoteBlock)bs).getRawNote());
+			extra.push((Byte)((NoteBlock)bs).getRawNote());
+		}
+		if(md instanceof Door){
+			extra.push(((Door)md).isOpen());
+			extra.push(((Door)md).isTopHalf());
 		}
 	}
 	public Material getType(){
-		return _type;
+		return md.getItemType();
 	}
 }

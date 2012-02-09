@@ -2,19 +2,22 @@ package me.Jackpot.BoatMod;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
-public class BoatModPlayerListener extends PlayerListener{
+public class BoatModPlayerListener implements Listener{
 	public static BoatMod plugin;
 	public BoatModPlayerListener(BoatMod instance){
 		plugin = instance;
 	}
 	
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onPlayerInteract(PlayerInteractEvent event){
 		Player player = event.getPlayer();
 		if(event.getMaterial() == Material.getMaterial(plugin.GetConfig(player, "SetTool"))){

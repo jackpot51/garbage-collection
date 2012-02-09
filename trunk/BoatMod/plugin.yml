@@ -6,5 +6,5 @@ commands:
       description: This command controls BoatMod's script engine.
       usage: /boatscript [script name]
    boatspeed:
-      description: This command controls BoatMod's script engine.
+      description: This command controls the speed of BoatMod boats.
       usage: /boatspeed [speed]
