@@ -5,6 +5,7 @@ import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -40,6 +41,7 @@ public class Boat {
 	World _world;
 	Player _captain;
 	AutoPilot _autopilot;
+	boolean _good = false;
 	
 	public Boat(Block controlblock, Player captain, BoatMod instance){
 		plugin = instance;
@@ -48,14 +50,84 @@ public class Boat {
 		_world = controlblock.getWorld();
 		_captain = captain;
 		_maxsize = plugin.MaxBoatSize(captain);
-		if(FindBlocks(controlblock, true) == null){
-			Message("Warning! You hit the boat size limit!");
+		
+		_good = create(controlblock);
+		_autopilot = new AutoPilot(this, instance);
+	}
+
+	Stack<Block> checknext = new Stack<Block>();
+	
+	public boolean create(Block controlblock){
+		checknext.clear();
+		checknext.push(controlblock);
+		while(!checknext.empty()){
+			if(FindBlocks(checknext.pop(), true) == null){
+				Message("You hit the " + plugin.GetConfig(_captain, "VehicleName") + " size limit!");
+				return false;
+			}
 		}
 		_vectors = new ArrayList<LocalVector>(_breakables.keySet());
 		_vectors.addAll(_blocks.keySet());
 		FindAir();
 		_vectors.addAll(_air);
-		_autopilot = new AutoPilot(this, instance);
+		return true;
+	}
+	
+	private LocalVector FindBlocks(Block b, boolean recurse){
+		Vector real = b.getLocation().toVector();
+		LocalVector vec = new LocalVector(real, _offset, 0);
+		if(!(_blocks.containsKey(vec) || _breakables.containsKey(vec)) && !_removed.containsKey(real)){
+			BlockData bd = new BlockData(b.getState());
+			if(plugin.CheckBoatable(bd.getType())){
+				if(_size < _maxsize){
+					if(bd.md instanceof Door){
+						Door door = (Door)bd.md;
+						if(door.isTopHalf()){
+							_breakables.put(vec, bd);
+							if(FindBlocks(b.getRelative(BlockFace.DOWN), false) == null){
+								return null;
+							}
+						}else if(!recurse){
+							_breakables.put(vec, bd);
+						}
+					}else if(bd.md instanceof Bed){
+						Bed bed = (Bed)bd.md;
+						if(bed.isHeadOfBed()){
+							_breakables.put(vec, bd);
+							if(FindBlocks(b.getRelative(bed.getFacing()), false) == null){
+								return null;
+							}
+						}else if(!recurse){
+							_breakables.put(vec, bd);
+						}
+					}else if(bd.md instanceof SimpleAttachableMaterialData
+							|| bd.md instanceof RedstoneWire
+							|| bd.md instanceof Rails
+							|| bd.md instanceof PressurePlate
+							|| bd.md instanceof Diode
+							|| bd.md instanceof PistonExtensionMaterial){
+						_breakables.put(vec, bd);
+					}else{
+						_blocks.put(vec, bd);
+					}
+					_size++;
+					if(recurse){
+						for(int x = -1; x <= 1; x++){
+							for(int y = -1; y <= 1; y++ ){
+								for(int z = -1; z <= 1; z++){
+									if(x != 0 || y != 0 || z != 0){
+										checknext.push(b.getRelative(x, y, z));
+									}
+								}
+							}
+						}
+					}
+				}else{
+					return null;
+				}
+			}
+		}
+		return vec;
 	}
 	
 	public Player getCaptain(){
@@ -130,6 +202,10 @@ public class Boat {
 		if(dir.getZ() < -zone){
 			vec.setZ(-1);
 		}
+		
+		if(plugin.GetConfig(_captain, "Vertical").equalsIgnoreCase("false")){
+			vec.setY(0);
+		}
 		return vec;
 	}
 	
@@ -152,74 +228,8 @@ public class Boat {
 	}
 	*/
 	
-	private boolean CheckInBoatInit(LocalVector vec){
-		return (
-				_blocks.containsKey(vec) ||
-				_breakables.containsKey(vec)
-				);
-	}
-	
 	private boolean CheckInBoat(LocalVector vec){
 		return _vectors.contains(vec);
-	}
-	
-	private LocalVector FindBlocks(Block b, boolean recurse){
-		Vector real = b.getLocation().toVector();
-		LocalVector vec = new LocalVector(real, _offset, 0);
-		if(!CheckInBoatInit(vec) && !_removed.containsKey(real)){
-			BlockData bd = new BlockData(b.getState());
-			if(plugin.CheckBoatable(bd.getType())){
-				if(_size < _maxsize){
-					if(bd.md instanceof Door){
-						Door door = (Door)bd.md;
-						if(door.isTopHalf()){
-							_breakables.put(vec, bd);
-							if(FindBlocks(b.getRelative(BlockFace.DOWN), false) == null){
-								return null;
-							}
-						}else if(!recurse){
-							_breakables.put(vec, bd);
-						}
-					}else if(bd.md instanceof Bed){
-						Bed bed = (Bed)bd.md;
-						if(bed.isHeadOfBed()){
-							_breakables.put(vec, bd);
-							if(FindBlocks(b.getRelative(bed.getFacing()), false) == null){
-								return null;
-							}
-						}else if(!recurse){
-							_breakables.put(vec, bd);
-						}
-					}else if(bd.md instanceof SimpleAttachableMaterialData
-							|| bd.md instanceof RedstoneWire
-							|| bd.md instanceof Rails
-							|| bd.md instanceof PressurePlate
-							|| bd.md instanceof Diode
-							|| bd.md instanceof PistonExtensionMaterial){
-						_breakables.put(vec, bd);
-					}else{
-						_blocks.put(vec, bd);
-					}
-					_size++;
-					if(recurse){
-						for(int x = -1; x <= 1; x++){
-							for(int y = -1; y <= 1; y++ ){
-								for(int z = -1; z <= 1; z++){
-									if(x != 0 || y != 0 || z != 0){
-										if(FindBlocks(b.getRelative(x, y, z), true) == null){
-											return null;
-										}
-									}
-								}
-							}
-						}
-					}
-				}else{
-					return null;
-				}
-			}
-		}
-		return vec;
 	}
 	
 	private boolean CheckSurrounding(Material m, LocalVector vec){
