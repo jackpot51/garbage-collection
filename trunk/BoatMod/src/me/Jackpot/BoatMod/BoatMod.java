@@ -79,16 +79,20 @@ public class BoatMod extends JavaPlugin {
 		if(sender instanceof Player){
 			Player player = (Player)sender;
 			if(cmd.getName().equalsIgnoreCase("boatauto")){
-				if(args.length == 1){
+				int ticks = 10;
+				if(args.length >= 2){
+					ticks=Integer.parseInt(args[1]);
+				}
+				if(args.length >= 1){
 					Boat boat = getBoat(player);
 					if(args[0].equalsIgnoreCase("start")){
 						if(boat != null){
-							boat._autopilot.set(true);
+							boat._autopilot.set(true, ticks);
 							Message(player, "Autopilot started.");
 						}
 					}else if(args[0].equalsIgnoreCase("stop")){
 						if(boat != null){
-							boat._autopilot.set(false);
+							boat._autopilot.set(false, ticks);
 							Message(player, "Autopilot stopped.");
 						}
 					}else{
@@ -100,7 +104,7 @@ public class BoatMod extends JavaPlugin {
 			else if(cmd.getName().equalsIgnoreCase("boatscript")){
 				if(args.length == 1 && scripts.containsKey(args[0])){
 					Script script = scripts.get(args[0]);
-					if(permissionHandler != null && (script.isValid() || permissionHandler.permission(player, script._permission))){
+					if(script.isValid() && (script._permission.equalsIgnoreCase(player.getName()) || (permissionHandler != null && permissionHandler.permission(player, script._permission)))){
 						scriptselect.put(player, script);
 						Message(player, "Click a boat to apply the " + args[0] + " script to it.");
 					}else{
@@ -241,12 +245,10 @@ public class BoatMod extends JavaPlugin {
 	
 	public String GetConfig(Player player, String configname){
 		String configvalue = config.get(configname).get("");
-		if(permissionHandler != null){
-			for(Enumeration<String> configgroups = config.get(configname).keys(); configgroups.hasMoreElements();){
-				String configgroup = configgroups.nextElement();
-				if(configgroup != "" && permissionHandler.permission(player, configgroup)){
-					configvalue = config.get(configname).get(configgroup);
-				}
+		for(Enumeration<String> configgroups = config.get(configname).keys(); configgroups.hasMoreElements();){
+			String configgroup = configgroups.nextElement();
+			if(configgroup != "" && (configgroup.equalsIgnoreCase(player.getName()) || (permissionHandler != null && permissionHandler.permission(player, configgroup)))){
+				configvalue = config.get(configname).get(configgroup);
 			}
 		}
 		return configvalue;
@@ -267,7 +269,7 @@ public class BoatMod extends JavaPlugin {
 	public void AddBoat(Player player, Block block){
 		Boat boat = getBoat(player);
 		if(boat != null){
-			boat._autopilot.set(false);
+			boat._autopilot.set(false, 10);
 			boats.remove(player);
 		}
 		if(scriptboats.containsKey(player)){
@@ -277,25 +279,33 @@ public class BoatMod extends JavaPlugin {
 		}
 		if(scriptselect.containsKey(player)){
 			ScriptBoat sboat = new ScriptBoat(block, player, scripts.get(scriptselect.get(player)), this);
-			Thread boatthread = new Thread(sboat);
-			scriptboats.put(player, boatthread);
-			boatthread.start();
 			boat = sboat;
+			if(sboat._good){
+				Thread boatthread = new Thread(sboat);
+				scriptboats.put(player, boatthread);
+				boatthread.start();
+			}
 		}else{
 			boat = new Boat(block, player, this);
-			boats.put(player, boat);
-			Message(player, "You now have control of " + (boat._size) + " blocks.");
+			if(boat._good){
+				boats.put(player, boat);
+				Message(player, "You have created a " + GetConfig(player, "VehicleName") + " of size " + boat._size + " blocks.");
+			}
 		}
-		LogMessage(player.getDisplayName() + " created a boat of size " + boat._size + " blocks.");
+		if(boat._good){
+			LogMessage(player.getDisplayName() + " created a " + GetConfig(player, "VehicleName") + " of size " + boat._size + " blocks.");
+		}else{
+			LogMessage(player.getDisplayName() + " could not create a " + GetConfig(player, "VehicleName") + ".");
+		}
 	}
 	
 	public void RemoveBoat(Player player){
 		Boat boat = getBoat(player);
 		if(boat != null){
-			boat._autopilot.set(false);
+			boat._autopilot.set(false, 10);
 			boats.remove(player);
-			Message(player, "Your boat has been deboated.");
-			LogMessage(player.getDisplayName() + "'s boat was removed.");
+			Message(player, "Your " + GetConfig(player, "VehicleName") + " has been removed.");
+			LogMessage(player.getDisplayName() + "'s " + GetConfig(player, "VehicleName") + " was removed.");
 		}
 		if(scriptboats.containsKey(player)){
 			Thread boatthread = scriptboats.get(player);
