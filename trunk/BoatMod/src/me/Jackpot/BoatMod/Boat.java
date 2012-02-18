@@ -62,7 +62,7 @@ public class Boat {
 		checknext.push(controlblock);
 		while(!checknext.empty()){
 			if(FindBlocks(checknext.pop(), true) == null){
-				Message("You hit the " + plugin.GetConfig(_captain, "VehicleName") + " size limit!");
+				Message("You hit the " + plugin.GetConfig(_captain, "VehicleName") + " size limit of " + _maxsize + "!");
 				return false;
 			}
 		}
@@ -89,6 +89,8 @@ public class Boat {
 							}
 						}else if(!recurse){
 							_breakables.put(vec, bd);
+						}else{
+							return vec;
 						}
 					}else if(bd.md instanceof Bed){
 						Bed bed = (Bed)bd.md;
@@ -99,6 +101,8 @@ public class Boat {
 							}
 						}else if(!recurse){
 							_breakables.put(vec, bd);
+						}else{
+							return vec;
 						}
 					}else if(bd.md instanceof SimpleAttachableMaterialData
 							|| bd.md instanceof RedstoneWire
