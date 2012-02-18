@@ -76,7 +76,15 @@ public class BoatMod extends JavaPlugin {
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
-		if(sender instanceof Player){
+		if(cmd.getName().equalsIgnoreCase("boatinfo")){
+			if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
+				Message(sender, "This server is running " + getDescription().getName() + " v" + getDescription().getVersion());
+				Message(sender, "There are currently " + boats.size() + " boats");
+			}else{
+				Message(sender, "Only operators may use this command.");
+			}
+			return true;
+		}else if(sender instanceof Player){
 			Player player = (Player)sender;
 			if(cmd.getName().equalsIgnoreCase("boatauto")){
 				int ticks = 10;
@@ -127,14 +135,6 @@ public class BoatMod extends JavaPlugin {
 					return true;
 				}
 			}
-		}else if(cmd.getName().equalsIgnoreCase("boatinfo")){
-			if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
-				Message(sender, "This server is running " + getDescription().getName() + " v" + getDescription().getVersion());
-				Message(sender, "There are currently " + boats.size() + " boats");
-			}else{
-				Message(sender, "Only operators may use this command.");
-			}
-			return true;
 		}else{
 			LogMessage("Only players may use the " + cmd.getName() + " command.");
 		}
