@@ -21,6 +21,7 @@ import org.bukkit.material.MaterialData;
 public class BlockData{
 	MaterialData md = new MaterialData(Material.AIR);
 	Stack<Object> extra = new Stack<Object>();
+	int power = 0;
 	public BlockData(){}
 	public BlockData(BlockState bs){
 		updateData(bs);
@@ -88,8 +89,8 @@ public class BlockData{
 			((NoteBlock)bs).setRawNote((Byte)extra.pop());
 		}
 		if(bs instanceof Furnace){
-			((Furnace)bs).setBurnTime((Short)extra.pop());
 			((Furnace)bs).setCookTime((Short)extra.pop());
+			((Furnace)bs).setBurnTime((Short)extra.pop());
 		}
 		if(bs instanceof ContainerBlock){
 			((ContainerBlock)bs).getInventory().setContents((ItemStack[])extra.pop());
@@ -116,6 +117,11 @@ public class BlockData{
 		if(bs instanceof Furnace){
 			extra.push(((Furnace)bs).getBurnTime());
 			extra.push(((Furnace)bs).getCookTime());
+			if(((Furnace)bs).getBurnTime() > 0){
+				power=1;
+			}else{
+				power=0;
+			}
 		}
 		if(bs instanceof NoteBlock){
 			extra.push(((NoteBlock)bs).getRawNote());

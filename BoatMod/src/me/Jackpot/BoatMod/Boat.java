@@ -14,15 +14,14 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.material.Attachable;
 import org.bukkit.material.Bed;
 import org.bukkit.material.Diode;
 import org.bukkit.material.Door;
 import org.bukkit.material.MaterialData;
-import org.bukkit.material.PistonExtensionMaterial;
 import org.bukkit.material.PressurePlate;
 import org.bukkit.material.Rails;
 import org.bukkit.material.RedstoneWire;
-import org.bukkit.material.SimpleAttachableMaterialData;
 import org.bukkit.util.Vector;
 
 public class Boat {
@@ -37,6 +36,7 @@ public class Boat {
 	Vector _offset;
 	Vector _dir;
 	int _movespeed = 1;
+	boolean _needspower;
 	int _maxsize;
 	World _world;
 	Player _captain;
@@ -50,6 +50,11 @@ public class Boat {
 		_world = controlblock.getWorld();
 		_captain = captain;
 		_maxsize = plugin.MaxBoatSize(captain);
+		if(plugin.GetConfig(captain, "NeedsPower").equalsIgnoreCase("true")){
+			_needspower = true;
+		}else{
+			_needspower = false;
+		}
 		
 		_good = create(controlblock);
 		_autopilot = new AutoPilot(this, instance);
@@ -104,12 +109,12 @@ public class Boat {
 						}else{
 							return vec;
 						}
-					}else if(bd.md instanceof SimpleAttachableMaterialData
+					}else if(bd.md instanceof Attachable
 							|| bd.md instanceof RedstoneWire
 							|| bd.md instanceof Rails
 							|| bd.md instanceof PressurePlate
 							|| bd.md instanceof Diode
-							|| bd.md instanceof PistonExtensionMaterial){
+							){
 						_breakables.put(vec, bd);
 					}else{
 						_blocks.put(vec, bd);
@@ -336,7 +341,7 @@ public class Boat {
 	}
 				
 	enum BoatStatus{
-		CHANGED, COLLISION;
+		CHANGED, COLLISION, POWERED;
 	}
 				
 	private EnumSet<BoatStatus> checkStatus(Vector movevec, double theta){
@@ -344,6 +349,7 @@ public class Boat {
 		int x = movevec.getBlockX();
 		int y = movevec.getBlockY();
 		int z = movevec.getBlockZ();
+		int power = 0;
 		for(Iterator<LocalVector> vectors = _vectors.iterator(); vectors.hasNext();){
 			LocalVector vec = vectors.next();
 			Block current = GetBlock(vec, lasttheta);
@@ -352,11 +358,16 @@ public class Boat {
 				status.add(BoatStatus.CHANGED);
 			}
 			bd.updateData(current.getState());
+			power += bd.power;
+			
 			Block next = GetBlock(vec, theta).getRelative(x, y, z);
 			LocalVector nextvec = new LocalVector(next.getLocation().toVector(), _offset, lasttheta);
 			if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
 				status.add(BoatStatus.COLLISION);
 			}
+		}
+		if(power >= _movespeed){
+			status.add(BoatStatus.POWERED);
 		}
 		return status;
 	}
@@ -371,22 +382,33 @@ public class Boat {
 			SetBlock(vec, theta, GetSavedData(vec));
 		}
 	}
-				
+	
+	private void ClearBlocks(Iterator<LocalVector> vectors, double theta){
+		while(vectors.hasNext()){
+			LocalVector vec = vectors.next();
+			BlockData.clearBlock(GetBlock(vec, theta).getState());
+			Vector real = vec.toReal(_offset, theta);
+			if(_removed.containsKey(real)){
+				SetBlock(vec, theta, _removed.get(real));
+				_removed.remove(real);
+			}else{
+				SetBlock(vec, theta, new BlockData());
+			}
+		}
+	}
+	
 	private boolean MoveBlocks(Vector movevec, double theta){
 		EnumSet<BoatStatus> status = checkStatus(movevec, theta);
 		if(!status.contains(BoatStatus.COLLISION)){
 			//clear old starting with breakables, replace removed blocks
-			for(Iterator<LocalVector> vectors = _vectors.iterator(); vectors.hasNext();){
-				LocalVector vec = vectors.next();
-				BlockData.clearBlock(GetBlock(vec, lasttheta).getState());
-				Vector real = vec.toReal(_offset, lasttheta);
-				if(_removed.containsKey(real)){
-					SetBlock(vec, lasttheta, _removed.get(real));
-					_removed.remove(real);
-				}else{
-					SetBlock(vec, lasttheta, new BlockData());
-				}
+			ClearBlocks(_vectors.iterator(), lasttheta);
+
+			if(_needspower && !status.contains(BoatStatus.POWERED)){
+				movevec = new Vector(0,0,0);
+				_autopilot.set(false, 10);
+				plugin.Message(_captain, "You need at least " + _movespeed + " power generators to move!");
 			}
+			
 			//teleport entities
 			List<Entity> entities = _world.getEntities();
 			for(int i = 0; i < entities.size(); i++){
@@ -400,7 +422,9 @@ public class Boat {
 					entities.get(i).setFireTicks(0);
 				}
 			}
+			
 			_offset.add(movevec);
+
 			//place air
 			PlaceBlocks(_air.iterator(), theta);
 			//place new nonbreakables, gather removed blocks
