@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -95,12 +96,12 @@ public class BoatMod extends JavaPlugin {
 					Boat boat = getBoat(player);
 					if(args[0].equalsIgnoreCase("start")){
 						if(boat != null){
-							boat._autopilot.set(true, ticks);
+							boat._autopilot.start(ticks);
 							Message(player, "Autopilot started.");
 						}
 					}else if(args[0].equalsIgnoreCase("stop")){
 						if(boat != null){
-							boat._autopilot.set(false, ticks);
+							boat._autopilot.stop();
 							Message(player, "Autopilot stopped.");
 						}
 					}else{
@@ -266,11 +267,19 @@ public class BoatMod extends JavaPlugin {
 		return boatable.contains(m);
 	}
 	
+	public boolean CheckIsBoated(Vector v){
+		for(int i = 0; i < boats.size(); i++){
+			if(boats.get(i)._offset.equals(v)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public void AddBoat(Player player, Block block){
 		Boat boat = getBoat(player);
 		if(boat != null){
-			boat._autopilot.set(false, 10);
-			boats.remove(player);
+			RemoveBoat(player);
 		}
 		if(scriptboats.containsKey(player)){
 			Thread boatthread = scriptboats.get(player);
@@ -302,7 +311,7 @@ public class BoatMod extends JavaPlugin {
 	public void RemoveBoat(Player player){
 		Boat boat = getBoat(player);
 		if(boat != null){
-			boat._autopilot.set(false, 10);
+			boat._autopilot.stop();
 			boats.remove(player);
 			Message(player, "Your " + GetConfig(player, "VehicleName") + " has been removed.");
 			LogMessage(player.getDisplayName() + "'s " + GetConfig(player, "VehicleName") + " was removed.");

@@ -18,7 +18,6 @@ import org.bukkit.material.Attachable;
 import org.bukkit.material.Bed;
 import org.bukkit.material.Diode;
 import org.bukkit.material.Door;
-import org.bukkit.material.MaterialData;
 import org.bukkit.material.PressurePlate;
 import org.bukkit.material.Rails;
 import org.bukkit.material.RedstoneWire;
@@ -26,11 +25,11 @@ import org.bukkit.util.Vector;
 
 public class Boat {
 	public static BoatMod plugin;
-	ArrayList<LocalVector> _vectors;
 	Hashtable<LocalVector, BlockData> _blocks = new Hashtable<LocalVector, BlockData>();
 	Hashtable<LocalVector, BlockData> _breakables = new Hashtable<LocalVector, BlockData>();
-	ArrayList<LocalVector> _air = new ArrayList<LocalVector>();
 	Hashtable<Vector, BlockData> _removed = new Hashtable<Vector, BlockData>();
+	//ArrayList<LocalVector> _air = new ArrayList<LocalVector>();
+	//ArrayList<LocalVector> _vectors;
 	int _size = 0;
 	double lasttheta = 0;
 	Vector _offset;
@@ -49,6 +48,7 @@ public class Boat {
 		_dir = GetCompassDirection(captain.getLocation().getDirection(), 0.5);
 		_world = controlblock.getWorld();
 		_captain = captain;
+		Message("Start block of type " + controlblock.getType().name());
 		_maxsize = plugin.MaxBoatSize(captain);
 		if(plugin.GetConfig(captain, "NeedsPower").equalsIgnoreCase("true")){
 			_needspower = true;
@@ -67,47 +67,63 @@ public class Boat {
 		checknext.push(controlblock);
 		while(!checknext.empty()){
 			if(FindBlocks(checknext.pop(), true) == null){
-				Message("You hit the " + plugin.GetConfig(_captain, "VehicleName") + " size limit of " + _maxsize + "!");
+				Message("You hit the " + plugin.GetConfig(_captain, "VehicleName") + " size limit of " + _maxsize + " or there was an overlap!");
 				return false;
 			}
 		}
+		/*
 		_vectors = new ArrayList<LocalVector>(_breakables.keySet());
 		_vectors.addAll(_blocks.keySet());
 		FindAir();
 		_vectors.addAll(_air);
+		*/
 		return true;
+	}
+	
+	private boolean CheckInBoat(LocalVector vec){
+		return (_blocks.containsKey(vec) || _breakables.containsKey(vec));
 	}
 	
 	private LocalVector FindBlocks(Block b, boolean recurse){
 		Vector real = b.getLocation().toVector();
 		LocalVector vec = new LocalVector(real, _offset, 0);
-		if(!(_blocks.containsKey(vec) || _breakables.containsKey(vec)) && !_removed.containsKey(real)){
+		if(!CheckInBoat(vec) && !_removed.containsKey(real)){
 			BlockData bd = new BlockData(b.getState());
 			if(plugin.CheckBoatable(bd.getType())){
-				if(_size < _maxsize){
+				if(_size < _maxsize && !plugin.CheckIsBoated(real)){
 					if(bd.md instanceof Door){
 						Door door = (Door)bd.md;
 						if(door.isTopHalf()){
 							_breakables.put(vec, bd);
-							if(FindBlocks(b.getRelative(BlockFace.DOWN), false) == null){
-								return null;
+							if(recurse){
+								if(FindBlocks(b.getRelative(BlockFace.DOWN), false) == null){
+									return null;
+								}
 							}
-						}else if(!recurse){
-							_breakables.put(vec, bd);
 						}else{
-							return vec;
+							if(recurse){
+								if(FindBlocks(b.getRelative(BlockFace.UP), false) == null){
+									return null;
+								}
+							}
+							_breakables.put(vec, bd);
 						}
 					}else if(bd.md instanceof Bed){
 						Bed bed = (Bed)bd.md;
 						if(bed.isHeadOfBed()){
 							_breakables.put(vec, bd);
-							if(FindBlocks(b.getRelative(bed.getFacing()), false) == null){
-								return null;
+							if(recurse){
+								if(FindBlocks(b.getRelative(bed.getFacing()), false) == null){
+									return null;
+								}
 							}
-						}else if(!recurse){
-							_breakables.put(vec, bd);
 						}else{
-							return vec;
+							if(recurse){
+								if(FindBlocks(b.getRelative(bed.getFacing().getOppositeFace()), false) == null){
+									return null;
+								}
+							}
+							_breakables.put(vec, bd);
 						}
 					}else if(bd.md instanceof Attachable
 							|| bd.md instanceof RedstoneWire
@@ -223,24 +239,8 @@ public class Boat {
 	private boolean CheckFluid(Material m){
 		return fluids.contains(m);
 	}
-	
+
 	/*
-	EnumSet<Material> breakable = EnumSet.of(Material.TORCH, Material.LADDER, Material.CAKE_BLOCK, Material.SIGN,
-											Material.DIODE_BLOCK_OFF, Material.DIODE_BLOCK_ON,
-											Material.SIGN_POST, Material.WALL_SIGN, Material.TRAP_DOOR, Material.LEVER,
-											Material.REDSTONE_WIRE, Material.REDSTONE_TORCH_OFF, Material.REDSTONE_TORCH_ON,
-											Material.STONE_BUTTON);
-											
-	
-	private boolean CheckBreakable(Material m){
-		return breakable.contains(m);
-	}
-	*/
-	
-	private boolean CheckInBoat(LocalVector vec){
-		return _vectors.contains(vec);
-	}
-	
 	private boolean CheckSurrounding(Material m, LocalVector vec){
 		Block b = GetBlock(vec, 0);
 		return (
@@ -319,6 +319,7 @@ public class Boat {
 			}
 		}
 	}
+	*/
 	
 	private void SetBlock(LocalVector vec, double theta, BlockData bd){
 		Vector real = vec.toReal(_offset, theta);
@@ -350,20 +351,25 @@ public class Boat {
 		int y = movevec.getBlockY();
 		int z = movevec.getBlockZ();
 		int power = 0;
-		for(Iterator<LocalVector> vectors = _vectors.iterator(); vectors.hasNext();){
-			LocalVector vec = vectors.next();
-			Block current = GetBlock(vec, lasttheta);
-			BlockData bd = GetSavedData(vec);
-			if(current.getType() != bd.getType()){
-				status.add(BoatStatus.CHANGED);
-			}
-			bd.updateData(current.getState());
-			power += bd.power;
-			
-			Block next = GetBlock(vec, theta).getRelative(x, y, z);
-			LocalVector nextvec = new LocalVector(next.getLocation().toVector(), _offset, lasttheta);
-			if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
-				status.add(BoatStatus.COLLISION);
+		ArrayList<Iterator<LocalVector>> iterators = new ArrayList<Iterator<LocalVector>>();
+		iterators.add(_blocks.keySet().iterator());
+		iterators.add(_breakables.keySet().iterator());
+		for(int i = 0; i < iterators.size(); i++){
+			while(iterators.get(i).hasNext()){
+				LocalVector vec = iterators.get(i).next();
+				Block current = GetBlock(vec, lasttheta);
+				BlockData bd = GetSavedData(vec);
+				if(current.getType() != bd.getType()){
+					status.add(BoatStatus.CHANGED);
+				}
+				bd.updateData(current.getState());
+				power += bd.power;
+				
+				Block next = GetBlock(vec, theta).getRelative(x, y, z);
+				LocalVector nextvec = new LocalVector(next.getLocation().toVector(), _offset, lasttheta);
+				if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
+					status.add(BoatStatus.COLLISION);
+				}
 			}
 		}
 		if(power >= _movespeed){
@@ -399,15 +405,13 @@ public class Boat {
 	
 	private boolean MoveBlocks(Vector movevec, double theta){
 		EnumSet<BoatStatus> status = checkStatus(movevec, theta);
-		if(!status.contains(BoatStatus.COLLISION)){
+		if(_needspower && !status.contains(BoatStatus.POWERED)){
+			_autopilot.stop();
+			Message("You need at least " + _movespeed + " powered furnaces to move!");
+		}else if(!status.contains(BoatStatus.COLLISION)){
 			//clear old starting with breakables, replace removed blocks
-			ClearBlocks(_vectors.iterator(), lasttheta);
-
-			if(_needspower && !status.contains(BoatStatus.POWERED)){
-				movevec = new Vector(0,0,0);
-				_autopilot.set(false, 10);
-				plugin.Message(_captain, "You need at least " + _movespeed + " power generators to move!");
-			}
+			ClearBlocks(_breakables.keySet().iterator(), lasttheta);
+			ClearBlocks(_blocks.keySet().iterator(), lasttheta);
 			
 			//teleport entities
 			List<Entity> entities = _world.getEntities();
@@ -425,8 +429,10 @@ public class Boat {
 			
 			_offset.add(movevec);
 
+			/*
 			//place air
 			PlaceBlocks(_air.iterator(), theta);
+			*/
 			//place new nonbreakables, gather removed blocks
 			PlaceBlocks(_blocks.keySet().iterator(), theta);
 			//place new breakables, gather removed blocks
