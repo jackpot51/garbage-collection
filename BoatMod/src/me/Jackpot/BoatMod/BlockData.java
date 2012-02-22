@@ -36,6 +36,7 @@ public class BlockData{
 		if(bs instanceof Jukebox){
 			((Jukebox)bs).setPlaying(null);
 		}
+		bs.update(true);
 	}
 	private BlockFace rotate(BlockFace face, double theta){
 		if(theta < 0){
@@ -54,6 +55,45 @@ public class BlockData{
 					break;
 				case EAST:
 					face = BlockFace.NORTH;
+					break;
+
+				case NORTH_EAST:
+					face = BlockFace.NORTH_WEST;
+					break;
+				case NORTH_WEST:
+					face = BlockFace.SOUTH_WEST;
+					break;
+				case SOUTH_WEST:
+					face = BlockFace.SOUTH_EAST;
+					break;
+				case SOUTH_EAST:
+					face = BlockFace.NORTH_WEST;
+					break;
+					
+				case NORTH_NORTH_EAST:
+					face = BlockFace.WEST_NORTH_WEST;
+					break;
+				case WEST_NORTH_WEST:
+					face = BlockFace.SOUTH_SOUTH_WEST;
+					break;
+				case SOUTH_SOUTH_WEST:
+					face = BlockFace.EAST_SOUTH_EAST;
+					break;
+				case EAST_SOUTH_EAST:
+					face = BlockFace.NORTH_NORTH_EAST;
+					break;
+					
+				case NORTH_NORTH_WEST:
+					face = BlockFace.WEST_SOUTH_WEST;
+					break;
+				case WEST_SOUTH_WEST:
+					face = BlockFace.SOUTH_SOUTH_EAST;
+					break;
+				case SOUTH_SOUTH_EAST:
+					face = BlockFace.EAST_NORTH_EAST;
+					break;
+				case EAST_NORTH_EAST:
+					face = BlockFace.NORTH_NORTH_WEST;
 					break;
 			}
 			theta -= Math.PI/2.0;

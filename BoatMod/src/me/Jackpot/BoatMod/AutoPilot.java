@@ -12,7 +12,7 @@ public class AutoPilot implements Runnable{
 	public AutoPilot(Boat boat, BoatMod instance){
 		plugin = instance;
 		_boat = boat;
-		_lv = new LocalVector(_boat._dir.clone());
+		_lv = new LocalVector(_boat.dir.clone());
 	}
 	
 	public void start(int ticks){

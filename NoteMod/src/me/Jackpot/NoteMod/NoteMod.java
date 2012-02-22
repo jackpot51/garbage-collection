@@ -15,7 +15,6 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
@@ -60,9 +59,7 @@ public class NoteMod extends JavaPlugin {
 		}
 		setupPermissions();
 		PluginManager pm = this.getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_INTERACT, playerListener, Event.Priority.High, this);
-		pm.registerEvent(Event.Type.PLAYER_PICKUP_ITEM, playerListener, Event.Priority.High, this);
-		pm.registerEvent(Event.Type.PLAYER_DROP_ITEM, playerListener, Event.Priority.High, this);
+		pm.registerEvents(playerListener, this);
 		LogMessage("Version " + this.getDescription().getVersion() + " has been enabled.");
 	}
 	
