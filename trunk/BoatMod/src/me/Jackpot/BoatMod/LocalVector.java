@@ -8,6 +8,10 @@ public class LocalVector extends BlockVector {
 		super(vec.toBlockVector());
 	}
 	
+	public LocalVector(int x, int y, int z){
+		super(x, y, z);
+	}
+	
 	public LocalVector(Vector real, Vector offset, double theta){
 		super((real.getBlockX() - offset.getBlockX())*(int)Math.round(Math.cos(theta)) - (real.getBlockZ() - offset.getBlockZ())*(int)Math.round(Math.sin(theta)),
 				real.getBlockY() - offset.getBlockY(),

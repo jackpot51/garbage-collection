@@ -96,12 +96,12 @@ public class BoatMod extends JavaPlugin {
 					Boat boat = getBoat(player);
 					if(args[0].equalsIgnoreCase("start")){
 						if(boat != null){
-							boat._autopilot.start(ticks);
+							boat.autopilot.start(ticks);
 							Message(player, "Autopilot started.");
 						}
 					}else if(args[0].equalsIgnoreCase("stop")){
 						if(boat != null){
-							boat._autopilot.stop();
+							boat.autopilot.stop();
 							Message(player, "Autopilot stopped.");
 						}
 					}else{
@@ -269,7 +269,7 @@ public class BoatMod extends JavaPlugin {
 	
 	public boolean CheckIsBoated(Vector v){
 		for(int i = 0; i < boats.size(); i++){
-			if(boats.get(i)._offset.equals(v)){
+			if(boats.get(i) != null && boats.get(i).offset.equals(v)){
 				return true;
 			}
 		}
@@ -289,20 +289,20 @@ public class BoatMod extends JavaPlugin {
 		if(scriptselect.containsKey(player)){
 			ScriptBoat sboat = new ScriptBoat(block, player, scripts.get(scriptselect.get(player)), this);
 			boat = sboat;
-			if(sboat._good){
+			if(sboat.good){
 				Thread boatthread = new Thread(sboat);
 				scriptboats.put(player, boatthread);
 				boatthread.start();
 			}
 		}else{
 			boat = new Boat(block, player, this);
-			if(boat._good){
+			if(boat.good){
 				boats.put(player, boat);
-				Message(player, "You have created a " + GetConfig(player, "VehicleName") + " of size " + boat._size + " blocks.");
+				Message(player, "You have created a " + GetConfig(player, "VehicleName") + " of size " + boat.size + " blocks.");
 			}
 		}
-		if(boat._good){
-			LogMessage(player.getDisplayName() + " created a " + GetConfig(player, "VehicleName") + " of size " + boat._size + " blocks.");
+		if(boat.good){
+			LogMessage(player.getDisplayName() + " created a " + GetConfig(player, "VehicleName") + " of size " + boat.size + " blocks.");
 		}else{
 			LogMessage(player.getDisplayName() + " could not create a " + GetConfig(player, "VehicleName") + ".");
 		}
@@ -311,7 +311,7 @@ public class BoatMod extends JavaPlugin {
 	public void RemoveBoat(Player player){
 		Boat boat = getBoat(player);
 		if(boat != null){
-			boat._autopilot.stop();
+			boat.autopilot.stop();
 			boats.remove(player);
 			Message(player, "Your " + GetConfig(player, "VehicleName") + " has been removed.");
 			LogMessage(player.getDisplayName() + "'s " + GetConfig(player, "VehicleName") + " was removed.");

@@ -8,6 +8,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 
+@SuppressWarnings("deprecation")
 public class NoteModPlayerListener extends PlayerListener{
 	public static NoteMod plugin;
 	public NoteModPlayerListener(NoteMod instance){
