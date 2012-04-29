@@ -1,0 +1,17 @@
+name: MapMod
+main: me.Jackpot.MapMod.MapMod
+version: 1
+author: jackpot51
+commands:
+   mapinfo:
+      description: Get information about this mod.
+      usage: /mapinfo
+   mapcenter:
+      description: Get or set currently held map's center on player or coords
+      usage: /mapcenter {[player], [x] [z]}
+   mapnumber:
+      description: Get or set currently held map's number
+      usage: /mapnumber [number]
+   mapscale:
+      description: Get or set currently held map's scale
+      usage: /mapscale [scale from 0-4]
