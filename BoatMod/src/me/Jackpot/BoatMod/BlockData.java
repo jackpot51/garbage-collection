@@ -7,11 +7,11 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.BrewingStand;
-import org.bukkit.block.ContainerBlock;
 import org.bukkit.block.Furnace;
 import org.bukkit.block.Jukebox;
 import org.bukkit.block.NoteBlock;
 import org.bukkit.block.Sign;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Directional;
 import org.bukkit.material.Door;
@@ -27,18 +27,20 @@ public class BlockData{
 		updateData(bs);
 	}
 	public BlockData(MaterialData newmd){
-		md = newmd;
+		this.md = newmd;
 	}
 	public static void clearBlock(BlockState bs){
-		if(bs instanceof ContainerBlock){
-			((ContainerBlock)bs).getInventory().clear();
+		if(bs instanceof InventoryHolder){
+			((InventoryHolder)bs).getInventory().clear();
 		}
 		if(bs instanceof Jukebox){
 			((Jukebox)bs).setPlaying(null);
 		}
 		bs.update(true);
 	}
-	private BlockFace rotate(BlockFace face, double theta){
+	private static BlockFace rotate(BlockFace start_face, double start_theta){
+		BlockFace face = start_face;
+		double theta = start_theta;
 		if(theta < 0){
 			theta += Math.PI*2.0;
 		}
@@ -95,6 +97,8 @@ public class BlockData{
 				case EAST_NORTH_EAST:
 					face = BlockFace.NORTH_NORTH_WEST;
 					break;
+				default:
+					break;	
 			}
 			theta -= Math.PI/2.0;
 		}
@@ -104,39 +108,39 @@ public class BlockData{
 		return face;
 	}
 	public void setBlock(Block b, double dtheta){
-		b.setType(md.getItemType());
+		b.setType(this.md.getItemType());
 		//set rotation
-		if(md instanceof Ladder){
-			((Ladder)md).setFacingDirection(rotate(((Ladder)md).getAttachedFace(), dtheta));
-		}else if(md instanceof Directional){
-			((Directional)md).setFacingDirection(rotate(((Directional)md).getFacing(), dtheta));
+		if(this.md instanceof Ladder){
+			((Ladder)this.md).setFacingDirection(rotate(((Ladder)this.md).getAttachedFace(), dtheta));
+		}else if(this.md instanceof Directional){
+			((Directional)this.md).setFacingDirection(rotate(((Directional)this.md).getFacing(), dtheta));
 		}
 		
 		//set extra states
-		if(md instanceof Door){
-			((Door)md).setTopHalf((Boolean)extra.pop());
-			((Door)md).setOpen((Boolean)extra.pop());
+		if(this.md instanceof Door){
+			((Door)this.md).setTopHalf((Boolean)this.extra.pop());
+			((Door)this.md).setOpen((Boolean)this.extra.pop());
 		}
-		b.setData(md.getData(), true);
+		b.setData(this.md.getData(), true);
 		BlockState bs = b.getState();
 		if(bs instanceof BrewingStand){
-			((BrewingStand)bs).setBrewingTime((Integer)extra.pop());
+			((BrewingStand)bs).setBrewingTime((Integer)this.extra.pop());
 		}
 		if(bs instanceof Jukebox){
-			((Jukebox)bs).setPlaying((Material)extra.pop());
+			((Jukebox)bs).setPlaying((Material)this.extra.pop());
 		}
 		if(bs instanceof NoteBlock){
-			((NoteBlock)bs).setRawNote((Byte)extra.pop());
+			((NoteBlock)bs).setRawNote((Byte)this.extra.pop());
 		}
 		if(bs instanceof Furnace){
-			((Furnace)bs).setCookTime((Short)extra.pop());
-			((Furnace)bs).setBurnTime((Short)extra.pop());
+			((Furnace)bs).setCookTime((Short)this.extra.pop());
+			((Furnace)bs).setBurnTime((Short)this.extra.pop());
 		}
-		if(bs instanceof ContainerBlock){
-			((ContainerBlock)bs).getInventory().setContents((ItemStack[])extra.pop());
+		if(bs instanceof InventoryHolder){
+			((InventoryHolder)bs).getInventory().setContents((ItemStack[])this.extra.pop());
 		}
 		if(bs instanceof Sign){
-			String lines[] = (String[]) extra.pop();
+			String lines[] = (String[]) this.extra.pop();
 			for(int i = 0; i < lines.length; i++){
 				((Sign)bs).setLine(i, lines[i]);
 			}
@@ -145,39 +149,39 @@ public class BlockData{
 		bs.update(true);
 	}
 	public void updateData(BlockState bs){
-		md = bs.getData();
+		this.md = bs.getData();
 		//get extra states
-		extra.clear();
+		this.extra.clear();
 		if(bs instanceof Sign){
-			extra.push(((Sign)bs).getLines());
+			this.extra.push(((Sign)bs).getLines());
 		}
-		if(bs instanceof ContainerBlock){
-			extra.push(((ContainerBlock)bs).getInventory().getContents());
+		if(bs instanceof InventoryHolder){
+			this.extra.push(((InventoryHolder)bs).getInventory().getContents());
 		}
 		if(bs instanceof Furnace){
-			extra.push(((Furnace)bs).getBurnTime());
-			extra.push(((Furnace)bs).getCookTime());
+			this.extra.push(((Furnace)bs).getBurnTime());
+			this.extra.push(((Furnace)bs).getCookTime());
 			if(((Furnace)bs).getBurnTime() > 0){
-				power=1;
+				this.power=1;
 			}else{
-				power=0;
+				this.power=0;
 			}
 		}
 		if(bs instanceof NoteBlock){
-			extra.push(((NoteBlock)bs).getRawNote());
+			this.extra.push(((NoteBlock)bs).getRawNote());
 		}
 		if(bs instanceof Jukebox){
-			extra.push(((Jukebox)bs).getPlaying());
+			this.extra.push(((Jukebox)bs).getPlaying());
 		}
 		if(bs instanceof BrewingStand){
-			extra.push(((BrewingStand)bs).getBrewingTime());
+			this.extra.push(((BrewingStand)bs).getBrewingTime());
 		}
-		if(md instanceof Door){
-			extra.push(((Door)md).isOpen());
-			extra.push(((Door)md).isTopHalf());
+		if(this.md instanceof Door){
+			this.extra.push(((Door)this.md).isOpen());
+			this.extra.push(((Door)this.md).isTopHalf());
 		}
 	}
 	public Material getType(){
-		return md.getItemType();
+		return this.md.getItemType();
 	}
 }

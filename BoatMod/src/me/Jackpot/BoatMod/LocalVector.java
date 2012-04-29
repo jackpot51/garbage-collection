@@ -8,8 +8,8 @@ public class LocalVector extends BlockVector {
 		super(vec.toBlockVector());
 	}
 	
-	public LocalVector(int x, int y, int z){
-		super(x, y, z);
+	public LocalVector(int setup_x, int setup_y, int setup_z){
+		super(setup_x, setup_y, setup_z);
 	}
 	
 	public LocalVector(Vector real, Vector offset, double theta){
