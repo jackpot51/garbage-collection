@@ -5,32 +5,32 @@ import org.bukkit.util.Vector;
 
 public class AutoPilot implements Runnable{
 	public static BoatMod plugin;
-	int _autopilot;
-	Boat _boat;
-	LocalVector _lv;
+	int autopilot;
+	Boat boat;
+	LocalVector lv;
 	
-	public AutoPilot(Boat boat, BoatMod instance){
+	public AutoPilot(Boat setup_boat, BoatMod instance){
 		plugin = instance;
-		_boat = boat;
-		_lv = new LocalVector(_boat.dir.clone());
+		this.boat = setup_boat;
+		this.lv = new LocalVector(this.boat.dir.clone());
 	}
 	
 	public void start(int ticks){
-		if(_autopilot != 0){
+		if(this.autopilot != 0){
 			stop();
 		}
-		_autopilot = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0, ticks);
+		this.autopilot = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0, ticks);
 	}
 	
 	public void stop(){
-		if(_autopilot != 0){
-			plugin.getServer().getScheduler().cancelTask(_autopilot);
-			_autopilot = 0;
+		if(this.autopilot != 0){
+			plugin.getServer().getScheduler().cancelTask(this.autopilot);
+			this.autopilot = 0;
 		}
 	}
 	
 	@Override
 	public void run() {
-		_boat.Move((_lv.toReal(new Vector(0, 0, 0), _boat.lasttheta)));
+		this.boat.Move((this.lv.toReal(new Vector(0, 0, 0), this.boat.lasttheta)));
 	}
 }

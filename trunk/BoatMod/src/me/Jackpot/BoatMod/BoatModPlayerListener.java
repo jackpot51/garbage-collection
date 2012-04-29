@@ -18,7 +18,7 @@ public class BoatModPlayerListener implements Listener{
 	}
 	
 	@EventHandler(priority = EventPriority.HIGHEST)
-	public void onPlayerInteract(PlayerInteractEvent event){
+	public static void onPlayerInteract(PlayerInteractEvent event){
 		Player player = event.getPlayer();
 		if(event.getMaterial() == Material.getMaterial(plugin.GetConfig(player, "SetTool"))){
 			if(event.getAction() == Action.LEFT_CLICK_BLOCK){
@@ -38,7 +38,7 @@ public class BoatModPlayerListener implements Listener{
 	}
 	
 	@EventHandler(priority = EventPriority.NORMAL)
-	public void onPlayerJoin(PlayerJoinEvent event){
+	public static void onPlayerJoin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
 		if(plugin.getDescription().getAuthors().contains(player.getName())){
 			plugin.BroadcastMessage("The creator of " + plugin.getDescription().getName() + ", " + player.getName() + " has arrived!");
@@ -46,12 +46,12 @@ public class BoatModPlayerListener implements Listener{
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
-	public void onPlayerKick(PlayerKickEvent event){
+	public static void onPlayerKick(PlayerKickEvent event){
 		plugin.RemoveBoat(event.getPlayer());
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
-	public void onPlayerQuit(PlayerQuitEvent event){
+	public static void onPlayerQuit(PlayerQuitEvent event){
 		plugin.RemoveBoat(event.getPlayer());
 	}
 }
