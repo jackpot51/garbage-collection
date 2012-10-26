@@ -11,14 +11,7 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{BoatModPlayerListener.java"/>
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{ScriptBoat.java"/>
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{AutoPilot.java"/>
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{LocalVector.java"/>
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{Script.java"/>
+        <javaElement handleIdentifier="=BoatMod/src"/>
         <file path="/BoatMod/plugin.yml"/>
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{BoatMod.java"/>
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{BlockData.java"/>
-        <javaElement handleIdentifier="=BoatMod/src&lt;me.Jackpot.BoatMod{Boat.java"/>
     </selectedElements>
 </jardesc>

@@ -1,6 +1,6 @@
 name: BoatMod
 main: me.Jackpot.BoatMod.BoatMod
-version: 12
+version: 13
 author: jackpot51
 commands:
    boatauto:
