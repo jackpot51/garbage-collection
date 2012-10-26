@@ -108,7 +108,7 @@ public class BlockData{
 		return face;
 	}
 	public void setBlock(Block b, double dtheta){
-		b.setType(this.md.getItemType());
+		b.setTypeId(this.md.getItemTypeId(), false);
 		//set rotation
 		if(this.md instanceof Ladder){
 			((Ladder)this.md).setFacingDirection(rotate(((Ladder)this.md).getAttachedFace(), dtheta));

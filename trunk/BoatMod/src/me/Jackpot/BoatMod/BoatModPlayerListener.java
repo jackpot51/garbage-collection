@@ -22,16 +22,20 @@ public class BoatModPlayerListener implements Listener{
 		Player player = event.getPlayer();
 		if(event.getMaterial() == Material.getMaterial(plugin.GetConfig(player, "SetTool"))){
 			if(event.getAction() == Action.LEFT_CLICK_BLOCK){
+				event.setCancelled(true);
 				plugin.AddBoat(player, event.getClickedBlock());
 			}else if(event.getAction() == Action.LEFT_CLICK_AIR){
+				event.setCancelled(true);
 				plugin.RemoveBoat(player);
 			}
 		}
 		if(event.getMaterial() == Material.getMaterial(plugin.GetConfig(player, "MoveTool"))){
 			if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK){
+				event.setCancelled(true);
 				plugin.MoveBoat(player);
 			}
 			else if(event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK){
+				event.setCancelled(true);
 				plugin.RotateBoat(player);
 			}
 		}

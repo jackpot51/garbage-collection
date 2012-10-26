@@ -21,6 +21,8 @@ import org.bukkit.material.Diode;
 import org.bukkit.material.Door;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
+import org.bukkit.material.PistonBaseMaterial;
+import org.bukkit.material.PistonExtensionMaterial;
 import org.bukkit.material.PressurePlate;
 import org.bukkit.material.Rails;
 import org.bukkit.material.RedstoneWire;
@@ -52,7 +54,6 @@ public class Boat {
 		this.offset = controlblock.getLocation().toVector();
 		this.dir = GetCompassDirection(this.captain.getLocation().getDirection(), 0.5);
 		this.world = controlblock.getWorld();
-		Message("Start block of type " + controlblock.getType().name());
 		this.maxsize = plugin.MaxBoatSize(this.captain);
 		if(plugin.GetConfig(this.captain, "NeedsPower").equalsIgnoreCase("true")){
 			this.needspower = true;
@@ -119,10 +120,31 @@ public class Boat {
 							}
 							this.breakables.put(vec, bd);
 						}else{
+							this.breakables.put(vec, bd);
 							if(recurse){
 								if(FindBlocks(b.getRelative(bed.getFacing()), false) == null){
 									return null;
 								}
+							}
+						}
+					}
+					else if(bd.md instanceof PistonBaseMaterial){
+						PistonBaseMaterial piston = (PistonBaseMaterial)bd.md;
+						if(recurse){
+							if(FindBlocks(b.getRelative(piston.getFacing()), false) == null){
+								return null;
+							}
+						}
+						this.breakables.put(vec, bd);
+						Message("Placed piston base at " + this.breakables.size());
+					}
+					else if(bd.md instanceof PistonExtensionMaterial){
+						PistonExtensionMaterial piston = (PistonExtensionMaterial)bd.md;
+						this.breakables.put(vec, bd);
+						Message("Placed piston extension at " + this.breakables.size());
+						if(recurse){
+							if(FindBlocks(b.getRelative(piston.getFacing().getOppositeFace()), false) == null){
+								return null;
 							}
 						}
 					}
