@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -63,67 +64,99 @@ public class BoatMod extends JavaPlugin {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
-		if(cmd.getName().equalsIgnoreCase("boatinfo")){
-			if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
+		if(cmd.getName().equalsIgnoreCase("boat")){
+			if(args.length == 0 || args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("help")){
 				Message(sender, "This server is running " + getDescription().getName() + " v" + getDescription().getVersion());
-				Message(sender, "There are currently " + this.boats.size() + " boats");
-			}else{
-				Message(sender, "Only operators may use this command.");
-			}
-			return true;
-		}else if(sender instanceof Player){
-			Player player = (Player)sender;
-			if(cmd.getName().equalsIgnoreCase("boatauto")){
-				int ticks = 10;
-				if(args.length >= 2){
-					ticks=Integer.parseInt(args[1]);
-				}
-				if(args.length >= 1){
-					Boat boat = getBoat(player);
-					if(args[0].equalsIgnoreCase("start")){
-						if(boat != null){
-							boat.autopilot.start(ticks);
-							Message(player, "Autopilot started.");
+				Message(sender, " /boat auto [start or stop]");
+				Message(sender, "    This command allows you to autopilot a boat.");
+				Message(sender, " /boat script [script name]");
+				Message(sender, "    This command controls BoatMod's script engine.");
+				Message(sender, " /boat speed [speed]");
+				Message(sender, "    This command controls the speed of BoatMod boats.");
+				if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
+					Message(sender, "There are currently " + this.boats.size() + (this.boats.size() == 1 ? " boat" : " boats"));
+					
+					Message(sender, "Config:");
+					for(Iterator<String> it = config.keySet().iterator(); it.hasNext();){
+						String i = it.next();
+						Message(sender, "    " + i);
+						for(Iterator<String> jt = config.get(i).keySet().iterator(); jt.hasNext();){
+							String j = jt.next();
+							Message(sender, "        " + j + " = " + config.get(i).get(j));
 						}
-					}else if(args[0].equalsIgnoreCase("stop")){
-						if(boat != null){
-							boat.autopilot.stop();
-							Message(player, "Autopilot stopped.");
+					}
+					
+				}else{
+					Message(sender, "Only operators can see more information.");
+				}
+				return true;
+			}else if(args.length >= 1 && sender instanceof Player){
+				Player player = (Player)sender;
+				if(args[0].equalsIgnoreCase("auto")){
+					int ticks = 10;
+					if(args.length == 3){
+						ticks=Integer.parseInt(args[2]);
+					}
+					else if(args.length == 2){
+						Boat boat = getBoat(player);
+						if(args[1].equalsIgnoreCase("start")){
+							if(boat != null){
+								boat.autopilot.start(ticks);
+								Message(player, "Autopilot started.");
+							}
+						}else if(args[1].equalsIgnoreCase("stop")){
+							if(boat != null){
+								boat.autopilot.stop();
+								Message(player, "Autopilot stopped.");
+							}
+						}else{
+							Message(player, "You must supply start or stop as an argument.");
 						}
 					}else{
 						Message(player, "You must supply start or stop as an argument.");
 					}
 					return true;
 				}
-			}
-			else if(cmd.getName().equalsIgnoreCase("boatscript")){
-				if(args.length == 1 && this.scripts.containsKey(args[0])){
-					Script script = this.scripts.get(args[0]);
-					if(script.isValid() && (script.permission.equalsIgnoreCase(player.getName()) || player.hasPermission(script.permission))){
-						this.scriptselect.put(player, script);
-						Message(player, "Click a boat to apply the " + args[0] + " script to it.");
+				else if(args[0].equalsIgnoreCase("script")){
+					if(args.length == 2 && this.scripts.containsKey(args[1])){
+						Script script = this.scripts.get(args[1]);
+						if(script.isValid() && (script.permission.equalsIgnoreCase(player.getName()) || player.hasPermission(script.permission))){
+							this.scriptselect.put(player, script);
+							Message(player, "Click a boat to apply the " + args[1] + " script to it.");
+						}else{
+							Message(player, "You do not have access to the " + args[1] + " script.");
+						}
 					}else{
-						Message(player, "You do not have access to the " + args[0] + " script.");
+						if(this.scripts.keySet().size() == 0){
+							Message(player, "There are no available scripts");
+						}else{
+							Message(player, "Here are available scripts:");
+							for(Iterator<String> it = this.scripts.keySet().iterator(); it.hasNext();){
+								Message(player, it.next());
+							}
+						}
 					}
 					return true;
 				}
-			}
-			else if(cmd.getName().equalsIgnoreCase("boatspeed")){
-				if(args.length == 1){
-					Integer newspeed = Integer.parseInt(args[0]);
-					if(newspeed > 0 && newspeed <= MaxBoatSpeed(player)){
-						Boat boat = getBoat(player);
-						if(boat != null){
-							boat.ChangeSpeed(newspeed);
+				else if(args[0].equalsIgnoreCase("speed")){
+					if(args.length == 2){
+						Integer newspeed = Integer.parseInt(args[1]);
+						if(newspeed > 0 && newspeed <= MaxBoatSpeed(player)){
+							Boat boat = getBoat(player);
+							if(boat != null){
+								boat.ChangeSpeed(newspeed);
+							}
+						}else{
+							Message(player, "You must supply an integer between 1 and " + MaxBoatSpeed(player) + ".");
 						}
 					}else{
 						Message(player, "You must supply an integer between 1 and " + MaxBoatSpeed(player) + ".");
 					}
 					return true;
 				}
+			}else{
+				LogMessage("Only players may use the " + cmd.getName() + " " + args[0] + " command.");
 			}
-		}else{
-			LogMessage("Only players may use the " + cmd.getName() + " command.");
 		}
 		return false;
 	}
@@ -191,11 +224,7 @@ public class BoatMod extends JavaPlugin {
 									if(Material.getMaterial(line) != null){
 										this.boatable.add(Material.getMaterial(line));
 									}else{
-										try{
-											this.boatable.add(Material.getMaterial(Integer.parseInt(line)));
-										}catch(NumberFormatException ex){
-											error=true;
-										}
+										error=true;
 									}
 									break;
 								case SCRIPT:
@@ -232,12 +261,17 @@ public class BoatMod extends JavaPlugin {
 	}
 	
 	public String GetConfig(Player player, String configname){
-		String configvalue = this.config.get(configname).get("");
-		for(Enumeration<String> configgroups = this.config.get(configname).keys(); configgroups.hasMoreElements();){
-			String configgroup = configgroups.nextElement();
-			if(configgroup != "" && (configgroup.equalsIgnoreCase(player.getName()) || player.hasPermission(configgroup))){
-				configvalue = this.config.get(configname).get(configgroup);
+		String configvalue = "";
+		try{
+			configvalue = this.config.get(configname).get("");
+			for(Enumeration<String> configgroups = this.config.get(configname).keys(); configgroups.hasMoreElements();){
+				String configgroup = configgroups.nextElement();
+				if(configgroup != "" && (configgroup.equalsIgnoreCase(player.getName()) || player.hasPermission(configgroup))){
+					configvalue = this.config.get(configname).get(configgroup);
+				}
 			}
+		}catch(NullPointerException ex){
+			LogMessage(player.getName() + "'s config '" + configname + "' failed to load");
 		}
 		return configvalue;
 	}
@@ -280,6 +314,7 @@ public class BoatMod extends JavaPlugin {
 				Thread boatthread = new Thread(sboat);
 				this.scriptboats.put(player, boatthread);
 				boatthread.start();
+				Message(player, "You have created a " + GetConfig(player, "VehicleName") + " of size " + boat.size + " blocks with the script " + this.scriptselect.get(player) + ".");
 			}
 		}else{
 			boat = new Boat(block, player, this);

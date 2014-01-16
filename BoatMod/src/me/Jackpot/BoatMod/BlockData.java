@@ -3,6 +3,7 @@ package me.Jackpot.BoatMod;
 import java.util.Stack;
 
 import org.bukkit.Material;
+import org.bukkit.Note;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -14,9 +15,10 @@ import org.bukkit.block.Sign;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Directional;
-import org.bukkit.material.Door;
 import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
+import org.bukkit.material.Openable;
+import org.bukkit.material.Stairs;
 
 public class BlockData{
 	MaterialData md = new MaterialData(Material.AIR);
@@ -112,16 +114,21 @@ public class BlockData{
 		//set rotation
 		if(this.md instanceof Ladder){
 			((Ladder)this.md).setFacingDirection(rotate(((Ladder)this.md).getAttachedFace(), dtheta));
+		}else if(this.md instanceof Stairs){
+			((Stairs)this.md).setFacingDirection(rotate(((Stairs)this.md).getAscendingDirection(), dtheta));
 		}else if(this.md instanceof Directional){
 			((Directional)this.md).setFacingDirection(rotate(((Directional)this.md).getFacing(), dtheta));
 		}
 		
 		//set extra states
-		if(this.md instanceof Door){
-			((Door)this.md).setTopHalf((Boolean)this.extra.pop());
-			((Door)this.md).setOpen((Boolean)this.extra.pop());
+		if(this.md instanceof Openable){
+			((Openable)this.md).setOpen((Boolean)this.extra.pop());
 		}
-		b.setData(this.md.getData(), true);
+		if(this.md instanceof Stairs){
+			((Stairs)this.md).setInverted((Boolean)this.extra.pop());
+		}
+		b.setData(this.md.getData(), false);
+		
 		BlockState bs = b.getState();
 		if(bs instanceof BrewingStand){
 			((BrewingStand)bs).setBrewingTime((Integer)this.extra.pop());
@@ -130,7 +137,7 @@ public class BlockData{
 			((Jukebox)bs).setPlaying((Material)this.extra.pop());
 		}
 		if(bs instanceof NoteBlock){
-			((NoteBlock)bs).setRawNote((Byte)this.extra.pop());
+			((NoteBlock)bs).setNote((Note)this.extra.pop());
 		}
 		if(bs instanceof Furnace){
 			((Furnace)bs).setCookTime((Short)this.extra.pop());
@@ -168,7 +175,7 @@ public class BlockData{
 			}
 		}
 		if(bs instanceof NoteBlock){
-			this.extra.push(((NoteBlock)bs).getRawNote());
+			this.extra.push(((NoteBlock)bs).getNote());
 		}
 		if(bs instanceof Jukebox){
 			this.extra.push(((Jukebox)bs).getPlaying());
@@ -176,9 +183,11 @@ public class BlockData{
 		if(bs instanceof BrewingStand){
 			this.extra.push(((BrewingStand)bs).getBrewingTime());
 		}
-		if(this.md instanceof Door){
-			this.extra.push(((Door)this.md).isOpen());
-			this.extra.push(((Door)this.md).isTopHalf());
+		if(this.md instanceof Stairs){
+			this.extra.push(((Stairs)this.md).isInverted());
+		}
+		if(this.md instanceof Openable){
+			this.extra.push(((Openable)this.md).isOpen());
 		}
 	}
 	public Material getType(){

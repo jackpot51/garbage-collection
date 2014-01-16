@@ -16,16 +16,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.material.Attachable;
-import org.bukkit.material.Bed;
-import org.bukkit.material.Diode;
-import org.bukkit.material.Door;
-import org.bukkit.material.Ladder;
 import org.bukkit.material.MaterialData;
-import org.bukkit.material.PistonBaseMaterial;
-import org.bukkit.material.PistonExtensionMaterial;
-import org.bukkit.material.PressurePlate;
-import org.bukkit.material.Rails;
-import org.bukkit.material.RedstoneWire;
 import org.bukkit.util.Vector;
 
 public class Boat {
@@ -67,6 +58,11 @@ public class Boat {
 
 	Stack<Block> checknext = new Stack<Block>();
 	
+	/**
+	 * Create a boat from a starting block
+	 * @param controlblock The starting block
+	 * @return True if the vehicle could be created, false if not
+	 */
 	public boolean create(Block controlblock){
 		this.checknext.clear();
 		this.checknext.push(controlblock);
@@ -85,6 +81,12 @@ public class Boat {
 		return (this.blocks.containsKey(vec) || this.breakables.containsKey(vec));
 	}
 	
+	/**
+	 * Recursively find boatable blocks
+	 * @param b The block to start from
+	 * @param recurse True to recurse, false otherwise
+	 * @return The vector that was added, null if the block could not be added
+	 */
 	private LocalVector FindBlocks(Block b, boolean recurse){
 		Vector real = b.getLocation().toVector();
 		LocalVector vec = new LocalVector(real, this.offset, 0);
@@ -92,69 +94,7 @@ public class Boat {
 			BlockData bd = new BlockData(b.getState());
 			if(plugin.CheckBoatable(bd.getType())){
 				if(this.size < this.maxsize && !plugin.CheckIsBoated(real)){
-					if(bd.md instanceof Door){
-						Door door = (Door)bd.md;
-						if(door.isTopHalf()){
-							this.breakables.put(vec, bd);
-							if(recurse){
-								if(FindBlocks(b.getRelative(BlockFace.DOWN), false) == null){
-									return null;
-								}
-							}
-						}else{
-							if(recurse){
-								if(FindBlocks(b.getRelative(BlockFace.UP), false) == null){
-									return null;
-								}
-							}
-							this.breakables.put(vec, bd);
-						}
-					}
-					else if(bd.md instanceof Bed){
-						Bed bed = (Bed)bd.md;
-						if(bed.isHeadOfBed()){
-							if(recurse){
-								if(FindBlocks(b.getRelative(bed.getFacing().getOppositeFace()), false) == null){
-									return null;
-								}
-							}
-							this.breakables.put(vec, bd);
-						}else{
-							this.breakables.put(vec, bd);
-							if(recurse){
-								if(FindBlocks(b.getRelative(bed.getFacing()), false) == null){
-									return null;
-								}
-							}
-						}
-					}
-					else if(bd.md instanceof PistonBaseMaterial){
-						PistonBaseMaterial piston = (PistonBaseMaterial)bd.md;
-						if(recurse){
-							if(FindBlocks(b.getRelative(piston.getFacing()), false) == null){
-								return null;
-							}
-						}
-						this.breakables.put(vec, bd);
-						Message("Placed piston base at " + this.breakables.size());
-					}
-					else if(bd.md instanceof PistonExtensionMaterial){
-						PistonExtensionMaterial piston = (PistonExtensionMaterial)bd.md;
-						this.breakables.put(vec, bd);
-						Message("Placed piston extension at " + this.breakables.size());
-						if(recurse){
-							if(FindBlocks(b.getRelative(piston.getFacing().getOppositeFace()), false) == null){
-								return null;
-							}
-						}
-					}
-					else if(bd.md instanceof Attachable
-							|| bd.md instanceof Ladder
-							|| bd.md instanceof RedstoneWire
-							|| bd.md instanceof Rails
-							|| bd.md instanceof PressurePlate
-							|| bd.md instanceof Diode
-							){
+					if(bd.md instanceof Attachable){
 						this.breakables.put(vec, bd);
 					}else{
 						this.blocks.put(vec, bd);
@@ -213,6 +153,11 @@ public class Boat {
 		this.movespeed = speed;
 	}
 	
+	/**
+	 * Move the boat a certain direction
+	 * @param direction The direction to move in
+	 * @return True if the boat was able to move, false otherwise.
+	 */
 	public boolean Move(Vector direction){
 		Vector vec = GetCompassDirection(direction, 0.75);
 		if(vec.length() == 1){
@@ -226,6 +171,11 @@ public class Boat {
 		return false;
 	}
 	
+	/**
+	 * Rotate the boat a certain direction
+	 * @param direction The direction to rotate the boat to
+	 * @return True if the boat could be moved, false if not
+	 */
 	public boolean Rotate(Vector direction){
 		Vector vec = GetCompassDirection(direction, 0.5);
 		if(vec.length() == 1){
@@ -243,6 +193,12 @@ public class Boat {
 		return false;
 	}
 	
+	/**
+	 * Normalize the player's looking direction
+	 * @param direction The player's looking direction
+	 * @param zone The deadzone
+	 * @return The normalized vector
+	 */
 	private Vector GetCompassDirection(Vector direction, double zone){
 		Vector vec = new Vector(0,0,0);
 		if(direction.getX() > zone){
@@ -272,7 +228,7 @@ public class Boat {
 		return vec;
 	}
 	
-	EnumSet<Material> fluids = EnumSet.of(Material.AIR, Material.WATER, Material.STATIONARY_WATER, Material.LAVA, Material.STATIONARY_LAVA);
+	EnumSet<Material> fluids = EnumSet.of(Material.AIR, Material.WATER, Material.STATIONARY_WATER, Material.LAVA, Material.STATIONARY_LAVA, Material.SNOW, Material.SNOW_BLOCK);
 				
 	private boolean CheckFluid(Material m){
 		return this.fluids.contains(m);
@@ -289,6 +245,9 @@ public class Boat {
 				);
 	}
 	
+	/**
+	 * Check for air blocks, these will move with the boat
+	 */
 	private void FindAir(){
 		this.air.clear();
 		for(int y = this.min.getBlockY(); y <= this.max.getBlockY(); y++){
@@ -353,6 +312,13 @@ public class Boat {
 		CHANGED, COLLISION, POWERED;
 	}
 				
+	/**
+	 * Check if there are collisions, check if the blocks have changed, check if the boat is powered.
+	 * @param vectors A list of block positions
+	 * @param movevec Where the blocks are moving
+	 * @param theta The amount of rotation
+	 * @return The status of the boat
+	 */
 	private EnumSet<BoatStatus> checkStatus(ArrayList<LocalVector> vectors, Vector movevec, double theta){
 		EnumSet<BoatStatus> status = EnumSet.noneOf(BoatStatus.class);
 		int x = movevec.getBlockX();
@@ -372,6 +338,9 @@ public class Boat {
 			Block next = GetBlock(vec, theta).getRelative(x, y, z);
 			LocalVector nextvec = new LocalVector(next.getLocation().toVector(), this.offset, this.lasttheta);
 			if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
+				if(this.plugin.getDescription().getAuthors().contains(this.captain.getName())){
+					this.Message("Boat collided with " + next.toString());
+				}
 				status.add(BoatStatus.COLLISION);
 			}
 		}
@@ -381,6 +350,11 @@ public class Boat {
 		return status;
 	}
 	
+	/**
+	 * Place blocks for the boat TODO: Use to load/save
+	 * @param vectors A list of block positions
+	 * @param theta The amount of rotation
+	 */
 	private void PlaceBlocks(ArrayList<LocalVector> vectors, double theta){
 		for(int i = 0; i < vectors.size(); i++){
 			LocalVector vec = vectors.get(i);
@@ -392,6 +366,11 @@ public class Boat {
 		}
 	}
 	
+	/**
+	 * Remove all boat blocks, replace water/lava blocks that where turned to air
+	 * @param vectors A list of block positions
+	 * @param theta The amount of rotation
+	 */
 	private void ClearBlocks(ArrayList<LocalVector> vectors, double theta){
 		for(int i = 0; i < vectors.size(); i++){
 			LocalVector vec = vectors.get(i);
@@ -406,6 +385,12 @@ public class Boat {
 		}
 	}
 	
+	/**
+	 * Move boat blocks, teleport entities
+	 * @param movevec Where the blocks are moving
+	 * @param theta The amount of rotation
+	 * @return True if able to move, false if not
+	 */
 	private boolean MoveBlocks(Vector movevec, double theta){
 		ArrayList<LocalVector> vectors = new ArrayList<LocalVector>(this.breakables.keySet());
 		vectors.addAll(this.blocks.keySet());
