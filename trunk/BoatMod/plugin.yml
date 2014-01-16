@@ -5,4 +5,4 @@ author: jackpot51
 commands:
    boat:
       description: This command gives information about BoatMod.
-      usage: /boat <auto [start, stop], script [script name], speed [speed]>
+      usage: /boat help

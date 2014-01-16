@@ -19,6 +19,7 @@ import org.bukkit.material.Attachable;
 import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
+@SuppressWarnings("unused")
 public class Boat {
 	public static BoatMod plugin;
 	Hashtable<LocalVector, BlockData> blocks = new Hashtable<LocalVector, BlockData>();
@@ -307,10 +308,8 @@ public class Boat {
 			return new BlockData();
 		}
 	}
-				
-	enum BoatStatus{
-		CHANGED, COLLISION, POWERED;
-	}
+	
+	enum BoatStatus { CHANGED, COLLISION, POWERED }
 				
 	/**
 	 * Check if there are collisions, check if the blocks have changed, check if the boat is powered.
@@ -338,7 +337,7 @@ public class Boat {
 			Block next = GetBlock(vec, theta).getRelative(x, y, z);
 			LocalVector nextvec = new LocalVector(next.getLocation().toVector(), this.offset, this.lasttheta);
 			if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
-				if(this.plugin.getDescription().getAuthors().contains(this.captain.getName())){
+				if(Boat.plugin.getDescription().getAuthors().contains(this.captain.getName())){
 					this.Message("Boat collided with " + next.toString());
 				}
 				status.add(BoatStatus.COLLISION);
@@ -351,7 +350,9 @@ public class Boat {
 	}
 	
 	/**
-	 * Place blocks for the boat TODO: Use to load/save
+	 * Place blocks for the boat
+	 * TODO: Use to load/save
+	 * TODO: Improve speed
 	 * @param vectors A list of block positions
 	 * @param theta The amount of rotation
 	 */
@@ -368,6 +369,7 @@ public class Boat {
 	
 	/**
 	 * Remove all boat blocks, replace water/lava blocks that where turned to air
+	 * TODO: Improve speed
 	 * @param vectors A list of block positions
 	 * @param theta The amount of rotation
 	 */
@@ -392,18 +394,33 @@ public class Boat {
 	 * @return True if able to move, false if not
 	 */
 	private boolean MoveBlocks(Vector movevec, double theta){
+		TickTimer t_all = new TickTimer();
+		t_all.start();
+		
+		boolean success = false;
+		
+		TickTimer t = new TickTimer();
+		t.start();
 		ArrayList<LocalVector> vectors = new ArrayList<LocalVector>(this.breakables.keySet());
 		vectors.addAll(this.blocks.keySet());
 		vectors.addAll(this.air);
+		t.stop(); Boat.plugin.LogMessage("1 in " + t.milliseconds() + " ms");
+		
+		t.start();
 		EnumSet<BoatStatus> status = checkStatus(vectors, movevec, theta);
+		t.stop(); Boat.plugin.LogMessage("2 in " + t.milliseconds() + " ms");
+		
 		if(this.needspower && !status.contains(BoatStatus.POWERED)){
 			this.autopilot.stop();
 			Message("You need at least " + this.movespeed + " powered furnaces to move!");
 		}else if(!status.contains(BoatStatus.COLLISION)){
-			//clear old starting with breakables, replace removed blocks
+			//Clear old starting with breakables, replace removed blocks
+			t.start();
 			ClearBlocks(vectors, this.lasttheta);
-			
-			//teleport entities
+			t.stop(); Boat.plugin.LogMessage("3 in " + t.milliseconds() + " ms");
+
+			//Move entities
+			t.start();
 			List<Entity> entities = this.world.getEntities();
 			for(int i = 0; i < entities.size(); i++){
 				Location entityloc = entities.get(i).getLocation().clone();
@@ -416,15 +433,21 @@ public class Boat {
 					entities.get(i).setFireTicks(0);
 				}
 			}
+			t.stop(); Boat.plugin.LogMessage("4 in " + t.milliseconds() + " ms");
 			
 			this.offset.add(movevec);
 
-			//place new blocks, gather removed blocks
+			//Place new blocks, gather removed blocks
+			t.start();
 			Collections.reverse(vectors);
 			PlaceBlocks(vectors, theta);
+			t.stop(); Boat.plugin.LogMessage("5 in " + t.milliseconds() + " ms");
 			this.lasttheta = theta;
-			return true;
+			success = true;
 		}
-		return false;
+		
+		t_all.stop(); Boat.plugin.LogMessage("Moved in a total of " + t_all.milliseconds() + " ms");
+		
+		return success;
 	}
 }
