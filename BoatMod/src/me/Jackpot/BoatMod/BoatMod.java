@@ -10,6 +10,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -19,6 +20,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+@SuppressWarnings("unused")
 public class BoatMod extends JavaPlugin {
 	Hashtable<String, Hashtable<String,String>> config;
 	ArrayList<Material> boatable;
@@ -32,8 +34,9 @@ public class BoatMod extends JavaPlugin {
 		getServer().broadcastMessage("[" + getDescription().getName() + "] " + msg);
 	}
 	
-	public void Message(CommandSender player, String msg){
-		player.sendMessage("[" + getDescription().getName() + "] " + msg);
+	public void Message(CommandSender sender, String msg){
+		sender.sendMessage(ChatColor.BLUE.toString() + "[" + getDescription().getName() + "]"
+							+ ChatColor.RESET.toString() + " " + msg);
 	}
 
 	public void LogMessage(String msg){
@@ -62,103 +65,186 @@ public class BoatMod extends JavaPlugin {
 		LogMessage("Successfully disabled.");
 	}
 	
-	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
-		if(cmd.getName().equalsIgnoreCase("boat")){
-			if(args.length == 0 || args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("help")){
-				Message(sender, "This server is running " + getDescription().getName() + " v" + getDescription().getVersion());
-				Message(sender, " /boat auto [start or stop]");
-				Message(sender, "    This command allows you to autopilot a boat.");
-				Message(sender, " /boat script [script name]");
-				Message(sender, "    This command controls BoatMod's script engine.");
-				Message(sender, " /boat speed [speed]");
-				Message(sender, "    This command controls the speed of BoatMod boats.");
-				if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
-					Message(sender, "There are currently " + this.boats.size() + (this.boats.size() == 1 ? " boat" : " boats"));
-					
-					Message(sender, "Config:");
-					for(Iterator<String> it = config.keySet().iterator(); it.hasNext();){
-						String i = it.next();
-						Message(sender, "    " + i);
-						for(Iterator<String> jt = config.get(i).keySet().iterator(); jt.hasNext();){
-							String j = jt.next();
-							Message(sender, "        " + j + " = " + config.get(i).get(j));
-						}
-					}
-					
-				}else{
-					Message(sender, "Only operators can see more information.");
-				}
-				return true;
-			}else if(args.length >= 1 && sender instanceof Player){
-				Player player = (Player)sender;
-				if(args[0].equalsIgnoreCase("auto")){
-					int ticks = 10;
-					if(args.length == 3){
-						ticks=Integer.parseInt(args[2]);
-					}
-					else if(args.length == 2){
-						Boat boat = getBoat(player);
-						if(args[1].equalsIgnoreCase("start")){
-							if(boat != null){
-								boat.autopilot.start(ticks);
-								Message(player, "Autopilot started.");
-							}
-						}else if(args[1].equalsIgnoreCase("stop")){
-							if(boat != null){
-								boat.autopilot.stop();
-								Message(player, "Autopilot stopped.");
-							}
-						}else{
-							Message(player, "You must supply start or stop as an argument.");
-						}
-					}else{
-						Message(player, "You must supply start or stop as an argument.");
-					}
-					return true;
-				}
-				else if(args[0].equalsIgnoreCase("script")){
-					if(args.length == 2 && this.scripts.containsKey(args[1])){
-						Script script = this.scripts.get(args[1]);
-						if(script.isValid() && (script.permission.equalsIgnoreCase(player.getName()) || player.hasPermission(script.permission))){
-							this.scriptselect.put(player, script);
-							Message(player, "Click a boat to apply the " + args[1] + " script to it.");
-						}else{
-							Message(player, "You do not have access to the " + args[1] + " script.");
-						}
-					}else{
-						if(this.scripts.keySet().size() == 0){
-							Message(player, "There are no available scripts");
-						}else{
-							Message(player, "Here are available scripts:");
-							for(Iterator<String> it = this.scripts.keySet().iterator(); it.hasNext();){
-								Message(player, it.next());
-							}
-						}
-					}
-					return true;
-				}
-				else if(args[0].equalsIgnoreCase("speed")){
-					if(args.length == 2){
-						Integer newspeed = Integer.parseInt(args[1]);
-						if(newspeed > 0 && newspeed <= MaxBoatSpeed(player)){
-							Boat boat = getBoat(player);
-							if(boat != null){
-								boat.ChangeSpeed(newspeed);
-							}
-						}else{
-							Message(player, "You must supply an integer between 1 and " + MaxBoatSpeed(player) + ".");
-						}
-					}else{
-						Message(player, "You must supply an integer between 1 and " + MaxBoatSpeed(player) + ".");
-					}
-					return true;
-				}
+	public boolean commandInfo(CommandSender sender){
+		Message(sender, "This server is running " + getDescription().getName() + " v" + getDescription().getVersion() + ".");
+		Message(sender, "This plugin was created by " + getDescription().getAuthors());
+		if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
+			Message(sender, "There " + (this.boats.size() == 1 ? "is" : "are") + " currently " + this.boats.size() + " " + (this.boats.size() == 1 ? "boat" : "boats") + ".");
+		}
+		if(sender instanceof Player){
+			Player player = (Player)sender;
+			Boat boat = getBoat(player);
+			if(boat != null){
+				Message(sender, "You have a " + GetConfig(player, "VehicleName") + " at (" + boat.offset + ") with " + boat.size + " " + (boat.size == 1 ? "block" : "blocks") + ".");
 			}else{
-				LogMessage("Only players may use the " + cmd.getName() + " " + args[0] + " command.");
+				Message(sender, "You do not have a " + GetConfig(player, "VehicleName") + ".");
 			}
 		}
-		return false;
+		Message(sender, "View usage information by running /boat help");
+		return true;
+	}
+	
+	public boolean commandHelp(CommandSender sender, String[] args){
+		Message(sender, "/boat help");
+		Message(sender, "  View usage information for the boat command.");
+		Message(sender, "/boat info");
+		Message(sender, "  View information about BoatMod.");
+		Message(sender, "/boat auto [start or stop]");
+		Message(sender, "  Autopilot a boat.");
+		Message(sender, "/boat config <config permission:name> <config value>");
+		Message(sender, "  View and set configuration.");
+		Message(sender, "/boat materials");
+		Message(sender, "  View boatable blocks.");
+		Message(sender, "/boat script <script name>");
+		Message(sender, "  Apply a script to a boat.");
+		Message(sender, "/boat speed <speed>");
+		Message(sender, "  Change the speed of a boat.");
+		return true;
+	}
+	
+	public boolean commandConfig(CommandSender sender, String[] args){
+		if(sender.isOp() || getDescription().getAuthors().contains(sender.getName())){
+			for(Iterator<String> it = this.config.keySet().iterator(); it.hasNext();){
+				String i = it.next();
+				for(Iterator<String> jt = this.config.get(i).keySet().iterator(); jt.hasNext();){
+					String j = jt.next();
+					if(j.length() > 0){
+						Message(sender, j + ":" + i + " = " + this.config.get(i).get(j));
+					}else{
+						Message(sender, i + " = " + this.config.get(i).get(j));
+					}
+				}
+			}
+		}else{
+			Message(sender, "Only operators can use the boat config command.");
+		}
+		return true;
+	}
+	
+	public boolean commandMaterials(CommandSender sender, String[] args){
+		if(this.boatable.size() >= 1){
+			for(int i = 0; i < this.boatable.size(); i++){
+				Message(sender, this.boatable.get(i).name());
+			}
+		}else{
+			Message(sender, "There are no boatable materials.");
+		}
+		return true;
+	}
+	
+	public boolean commandAuto(Player player, String[] args){
+
+		Boat boat = getBoat(player);
+		if(boat != null){
+			int ticks = 10;
+			if(args.length == 3){
+				ticks=Integer.parseInt(args[2]);
+			}
+			if(args.length >= 2){
+				if(args[1].equalsIgnoreCase("start")){
+					boat.autopilot.start(ticks);
+					Message(player, "Autopilot started.");
+				}else if(args[1].equalsIgnoreCase("stop")){
+					boat.autopilot.stop();
+					Message(player, "Autopilot stopped.");
+				}else{
+					Message(player, "You must supply start or stop as an argument.");
+				}
+			}else{
+				Message(player, "Autopilot is " + (boat.autopilot.isRunning() ? "running" : "not running") + ".");
+			}
+		}else{
+			Message(player, "You must have a " + GetConfig(player, "VehicleName") + " to use the boat auto command.");
+		}
+		return true;
+	}
+	
+	public boolean commandScript(Player player, String[] args){
+		if(args.length == 2 && this.scripts.containsKey(args[1])){
+			Script script = this.scripts.get(args[1]);
+			if(script.isValid() && (script.permission.equalsIgnoreCase(player.getName()) || player.hasPermission(script.permission))){
+				this.scriptselect.put(player, script);
+				Message(player, "Create a boat to apply the " + args[1] + " script to it.");
+			}else{
+				Message(player, "You do not have access to the " + args[1] + " script.");
+			}
+		}else{
+			if(this.scripts.keySet().size() == 0){
+				Message(player, "There are no available scripts");
+			}else{
+				Message(player, "Here are available scripts:");
+				for(Iterator<String> it = this.scripts.keySet().iterator(); it.hasNext();){
+					Message(player, it.next());
+				}
+			}
+		}
+		return true;
+	}
+	
+	public boolean commandSpeed(Player player, String[] args){
+		if(args.length >= 2){
+			Integer newspeed = Integer.parseInt(args[1]);
+			if(newspeed > 0 && newspeed <= MaxBoatSpeed(player)){
+				Boat boat = getBoat(player);
+				if(boat != null){
+					boat.ChangeSpeed(newspeed);
+				}else{
+					Message(player, "You must have a " + GetConfig(player, "VehicleName") + " to use the boat speed command.");
+				}
+			}else{
+				Message(player, "You must supply a number between 1 and " + MaxBoatSpeed(player) + ".");
+			}
+		}else{
+			Boat boat = getBoat(player);
+			if(boat != null){
+				Message(player, "The current " + GetConfig(player, "VehicleName") + " speed is " + boat.movespeed + ".");
+			}else{
+				Message(player, "You must have a " + GetConfig(player, "VehicleName") + " to use the boat speed command.");
+			}
+		}
+		return true;
+	}
+	
+	@Override
+	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
+		boolean success = false;
+		if(cmd.getName().equalsIgnoreCase("boat")){
+			Message(sender, ChatColor.BLUE + "/boat" + (args.length > 0 ? " " + args[0] : "") + ":" + ChatColor.RESET);
+			if(args.length == 0
+					|| (args.length >= 1 && args[0].equalsIgnoreCase("info"))
+					){
+				success = commandInfo(sender);
+			}else if(args.length >= 1 && args[0].equalsIgnoreCase("help")){
+				success = commandHelp(sender, args);
+			}
+			else if(args.length >= 1 && args[0].equalsIgnoreCase("config")){
+				success = commandConfig(sender, args);
+			}else if(args.length >= 1 && args[0].equalsIgnoreCase("materials")){
+				success = commandMaterials(sender, args);
+			}
+			else if(args.length >= 1 && args[0].equalsIgnoreCase("auto")){
+				if(sender instanceof Player){
+					success = commandAuto((Player)sender, args);
+				}else{
+					Message(sender, "Only players can use the boat auto command.");
+				}
+			}
+			else if(args.length >= 1 && args[0].equalsIgnoreCase("script")){
+				if(sender instanceof Player){
+					success = commandScript((Player)sender, args);
+				}else{
+					Message(sender, "Only players can use the boat script command.");
+				}
+			}
+			else if(args.length >= 1 && args[0].equalsIgnoreCase("speed")){
+				if(sender instanceof Player){
+					success = commandSpeed((Player)sender, args);
+				}else{
+					Message(sender, "Only players can use the boat speed command.");
+				}
+			}
+		}
+		return success;
 	}
 	
 	enum DataType{

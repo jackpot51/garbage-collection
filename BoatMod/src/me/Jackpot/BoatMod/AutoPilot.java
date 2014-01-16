@@ -5,7 +5,7 @@ import org.bukkit.util.Vector;
 
 public class AutoPilot implements Runnable{
 	public static BoatMod plugin;
-	int autopilot;
+	int task_id;
 	Boat boat;
 	LocalVector lv;
 	
@@ -13,20 +13,25 @@ public class AutoPilot implements Runnable{
 		plugin = instance;
 		this.boat = setup_boat;
 		this.lv = new LocalVector(this.boat.dir.clone());
+		this.task_id = 0;
 	}
 	
 	public void start(int ticks){
-		if(this.autopilot != 0){
+		if(isRunning()){
 			stop();
 		}
-		this.autopilot = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0, ticks);
+		this.task_id = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0, ticks);
 	}
 	
 	public void stop(){
-		if(this.autopilot != 0){
-			plugin.getServer().getScheduler().cancelTask(this.autopilot);
-			this.autopilot = 0;
+		if(isRunning()){
+			plugin.getServer().getScheduler().cancelTask(this.task_id);
+			this.task_id = 0;
 		}
+	}
+	
+	public boolean isRunning(){
+		return (this.task_id != 0);
 	}
 	
 	@Override

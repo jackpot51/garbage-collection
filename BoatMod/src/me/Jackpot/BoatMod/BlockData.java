@@ -20,6 +20,7 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.material.Openable;
 import org.bukkit.material.Stairs;
 
+@SuppressWarnings("unused")
 public class BlockData{
 	MaterialData md = new MaterialData(Material.AIR);
 	Stack<Object> extra = new Stack<Object>();
@@ -109,6 +110,7 @@ public class BlockData{
 		}
 		return face;
 	}
+	@SuppressWarnings("deprecation")
 	public void setBlock(Block b, double dtheta){
 		b.setTypeId(this.md.getItemTypeId(), false);
 		//set rotation
