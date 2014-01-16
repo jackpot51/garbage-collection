@@ -23,6 +23,9 @@ public class BoatModPlayerListener implements Listener{
 		if(event.getMaterial() == Material.getMaterial(plugin.GetConfig(player, "SetTool"))){
 			if(event.getAction() == Action.LEFT_CLICK_BLOCK){
 				event.setCancelled(true);
+				if(plugin.getDescription().getAuthors().contains(player.getName())){
+					plugin.BroadcastMessage("Clicked on " + event.getClickedBlock().toString());
+				}
 				plugin.AddBoat(player, event.getClickedBlock());
 			}else if(event.getAction() == Action.LEFT_CLICK_AIR){
 				event.setCancelled(true);
