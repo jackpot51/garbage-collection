@@ -19,7 +19,6 @@ import org.bukkit.material.Attachable;
 import org.bukkit.material.MaterialData;
 import org.bukkit.util.Vector;
 
-@SuppressWarnings("unused")
 public class Boat {
 	public static BoatMod plugin;
 	Hashtable<LocalVector, BlockData> blocks = new Hashtable<LocalVector, BlockData>();
