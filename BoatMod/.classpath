@@ -4,5 +4,6 @@
 	<classpathentry kind="lib" path="bukkit-1.7.2-R0.2.jar"/>
 	<classpathentry kind="lib" path="PermissionsBukkit-2.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="server/craftbukkit-1.7.2-R0.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
