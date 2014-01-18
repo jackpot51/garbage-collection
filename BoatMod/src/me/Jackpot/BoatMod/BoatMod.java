@@ -374,6 +374,7 @@ public class BoatMod extends JavaPlugin {
 		return this.boatable.contains(m);
 	}
 	
+	//TODO: Not working
 	public boolean CheckIsBoated(Vector v){
 		for(int i = 0; i < this.boats.size(); i++){
 			if(this.boats.get(i) != null && this.boats.get(i).offset.equals(v)){
