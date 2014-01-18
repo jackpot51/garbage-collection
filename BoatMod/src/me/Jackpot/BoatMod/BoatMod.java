@@ -6,8 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import org.bukkit.ChatColor;
@@ -22,12 +21,12 @@ import org.bukkit.util.Vector;
 
 @SuppressWarnings("unused")
 public class BoatMod extends JavaPlugin {
-	Hashtable<String, Hashtable<String,String>> config;
+	HashMap<String, HashMap<String,String>> config;
 	ArrayList<Material> boatable;
-	Hashtable<String, Script> scripts;
-	Hashtable<Player, Script> scriptselect;
-	Hashtable<Player, Boat> boats;
-	Hashtable<Player, Thread> scriptboats;
+	HashMap<String, Script> scripts;
+	HashMap<Player, Script> scriptselect;
+	HashMap<Player, Boat> boats;
+	HashMap<Player, Thread> scriptboats;
 	private final BoatModPlayerListener playerListener = new BoatModPlayerListener(this);
 	
 	public void BroadcastMessage(String msg){
@@ -45,12 +44,12 @@ public class BoatMod extends JavaPlugin {
 	
 	@Override
 	public void onEnable(){
-		this.config = new Hashtable<String, Hashtable<String, String>>();
+		this.config = new HashMap<String, HashMap<String, String>>();
 		this.boatable = new ArrayList<Material>();
-		this.scripts = new Hashtable<String, Script>();
-		this.scriptselect = new Hashtable<Player, Script>();
-		this.boats = new Hashtable<Player, Boat>();
-		this.scriptboats = new Hashtable<Player, Thread>();
+		this.scripts = new HashMap<String, Script>();
+		this.scriptselect = new HashMap<Player, Script>();
+		this.boats = new HashMap<Player, Boat>();
+		this.scriptboats = new HashMap<Player, Thread>();
 		ReadFile(new File("plugins/" + getDescription().getName()));
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(this.playerListener, this);
@@ -59,8 +58,8 @@ public class BoatMod extends JavaPlugin {
 	
 	@Override
 	public void onDisable(){
-		for(Enumeration<Player> players = this.boats.keys(); players.hasMoreElements();){
-			RemoveBoat(players.nextElement());
+		for(Iterator<Player> players = this.boats.keySet().iterator(); players.hasNext();){
+			RemoveBoat(players.next());
 		}
 		LogMessage("Successfully disabled.");
 	}
@@ -299,7 +298,7 @@ public class BoatMod extends JavaPlugin {
 										String configname = line.substring(0, line.indexOf("=", 0));
 										String configvalue = line.substring(line.indexOf("=", 0)+1);
 										if(!this.config.containsKey(configname)){
-											this.config.put(configname, new Hashtable<String, String>());
+											this.config.put(configname, new HashMap<String, String>());
 										}
 										this.config.get(configname).put(permission, configvalue);
 									}else{
@@ -350,8 +349,8 @@ public class BoatMod extends JavaPlugin {
 		String configvalue = "";
 		try{
 			configvalue = this.config.get(configname).get("");
-			for(Enumeration<String> configgroups = this.config.get(configname).keys(); configgroups.hasMoreElements();){
-				String configgroup = configgroups.nextElement();
+			for(Iterator<String> configgroups = this.config.get(configname).keySet().iterator(); configgroups.hasNext();){
+				String configgroup = configgroups.next();
 				if(configgroup != "" && (configgroup.equalsIgnoreCase(player.getName()) || player.hasPermission(configgroup))){
 					configvalue = this.config.get(configname).get(configgroup);
 				}

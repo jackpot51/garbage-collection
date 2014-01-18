@@ -3,9 +3,11 @@ package me.Jackpot.BoatMod;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.bukkit.Location;
@@ -21,9 +23,9 @@ import org.bukkit.util.Vector;
 
 public class Boat {
 	public static BoatMod plugin;
-	Hashtable<LocalVector, BlockData> blocks = new Hashtable<LocalVector, BlockData>();
-	Hashtable<LocalVector, BlockData> breakables = new Hashtable<LocalVector, BlockData>();
-	Hashtable<Vector, BlockData> removed = new Hashtable<Vector, BlockData>();
+	HashMap<LocalVector, BlockData> blocks = new HashMap<LocalVector, BlockData>();
+	HashMap<LocalVector, BlockData> breakables = new HashMap<LocalVector, BlockData>();
+	HashMap<Vector, BlockData> removed = new HashMap<Vector, BlockData>();
 	ArrayList<LocalVector> air = new ArrayList<LocalVector>();
 	int size = 0;
 	double lasttheta = 0;
@@ -346,8 +348,7 @@ public class Boat {
 	 * @param vectors A list of block positions
 	 * @param theta The amount of rotation
 	 */
-	private ArrayList<BoatChange> ClearBlocks(ArrayList<LocalVector> vectors, double theta){
-		ArrayList<BoatChange> changes = new ArrayList<BoatChange>();
+	private void ClearBlocks(LinkedHashMap<Vector, BlockData> changes, ArrayList<LocalVector> vectors, double theta){
 		for(int i = 0; i < vectors.size(); i++){
 			LocalVector vec = vectors.get(i);
 			
@@ -360,9 +361,12 @@ public class Boat {
 				this.removed.remove(real);
 			}
 			
-			changes.add(new BoatChange(real, theta - this.lasttheta, bd));
+			bd.rotate(theta - this.lasttheta);
+			if(changes.containsKey(real)){
+				changes.remove(real);
+			}
+			changes.put(real, bd);
 		}
-		return changes;
 	}
 	
 	/**
@@ -372,19 +376,25 @@ public class Boat {
 	 * @param vectors A list of block positions
 	 * @param theta The amount of rotation
 	 */
-	private ArrayList<BoatChange> PlaceBlocks(ArrayList<LocalVector> vectors, double theta){
-		ArrayList<BoatChange> changes = new ArrayList<BoatChange>();
+	private void PlaceBlocks(LinkedHashMap<Vector, BlockData> changes, ArrayList<LocalVector> vectors, double theta){
 		for(int i = 0; i < vectors.size(); i++){
 			LocalVector vec = vectors.get(i);
 			Vector real = vec.toReal(this.offset, theta);
 			if(!this.removed.containsKey(real)){
-				this.removed.put(real, new BlockData(GetBlock(vec, theta).getState()));
+				if(changes.containsKey(real)){
+					this.removed.put(real, changes.get(real));
+				}else{
+					this.removed.put(real, new BlockData(GetBlock(vec, theta).getState()));
+				}
 			}
 
 			BlockData bd = GetSavedData(vec);
-			changes.add(new BoatChange(real, theta - this.lasttheta, bd));
+			bd.rotate(theta - this.lasttheta);
+			if(changes.containsKey(real)){
+				changes.remove(real);
+			}
+			changes.put(real, bd);
 		}
-		return changes;
 	}
 	
 	/**
@@ -406,8 +416,9 @@ public class Boat {
 			this.autopilot.stop();
 			Message("You need at least " + this.movespeed + " powered furnaces to move!");
 		}else if(!status.contains(BoatStatus.COLLISION)){
+			LinkedHashMap<Vector, BlockData> changes = new LinkedHashMap<Vector, BlockData>();
 			//Clear old starting with breakables, replace removed blocks
-			ArrayList<BoatChange> clear_changes = ClearBlocks(vectors, this.lasttheta);
+			ClearBlocks(changes, vectors, this.lasttheta);
 
 			//Move entities
 			List<Entity> entities = this.world.getEntities();
@@ -424,17 +435,13 @@ public class Boat {
 			}
 			
 			this.offset.add(movevec);
-			//Todo: Make it so this can go after PlaceBlocks
-			for(int i = 0; i < clear_changes.size(); i++){
-				clear_changes.get(i).apply(this.world);
-			}
 			
 			//Place new blocks, gather removed blocks
 			Collections.reverse(vectors);
-			ArrayList<BoatChange> place_changes = PlaceBlocks(vectors, theta);
-			
-			for(int i = 0; i < place_changes.size(); i++){
-				place_changes.get(i).apply(this.world);
+			PlaceBlocks(changes, vectors, theta);
+
+			for(Map.Entry<Vector, BlockData> entry : changes.entrySet()){
+				entry.getValue().setBlock(this.world.getBlockAt(entry.getKey().getBlockX(), entry.getKey().getBlockY(), entry.getKey().getBlockZ()));
 			}
 			
 			this.lasttheta = theta;

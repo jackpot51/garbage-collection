@@ -41,7 +41,7 @@ public class BlockData{
 		}
 		bs.update(true);
 	}
-	private static BlockFace rotate(BlockFace start_face, double start_theta){
+	private static BlockFace rotateFace(BlockFace start_face, double start_theta){
 		BlockFace face = start_face;
 		double theta = start_theta;
 		if(theta < 0){
@@ -110,13 +110,11 @@ public class BlockData{
 		}
 		return face;
 	}
-
-	public void setBlock(Block b, double dtheta){
-		/** TODO: Make this faster */
-		b.setType(this.md.getItemType());
-		//set rotation
+	
+	public void rotate(double dtheta){
+		//Set rotation data
 		if(this.md instanceof Ladder){
-			((Ladder)this.md).setFacingDirection(rotate(((Ladder)this.md).getAttachedFace(), dtheta));
+			((Ladder)this.md).setFacingDirection(rotateFace(((Ladder)this.md).getAttachedFace(), dtheta));
 		}else if(this.md instanceof Lever){
 			Lever lever = (Lever)this.md;
 			switch(lever.getFacing()){
@@ -124,50 +122,74 @@ public class BlockData{
 			case UP:
 				break;
 			default:
-				lever.setFacingDirection(rotate(lever.getFacing(), dtheta));
+				lever.setFacingDirection(rotateFace(lever.getFacing(), dtheta));
 			}
 			//Do nothing for lever
 		}else if(this.md instanceof Stairs){
-			((Stairs)this.md).setFacingDirection(rotate(((Stairs)this.md).getAscendingDirection(), dtheta));
+			((Stairs)this.md).setFacingDirection(rotateFace(((Stairs)this.md).getAscendingDirection(), dtheta));
 		}else if(this.md instanceof Directional){
-			((Directional)this.md).setFacingDirection(rotate(((Directional)this.md).getFacing(), dtheta));
+			((Directional)this.md).setFacingDirection(rotateFace(((Directional)this.md).getFacing(), dtheta));
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	public void setBlock(Block b){
+		/** TODO: Make this faster */
+		boolean changed = false;
+		if(b.getType() != this.md.getItemType()){
+			changed = true;
+			b.setType(this.md.getItemType());
 		}
 		
 		//set extra states
 		if(this.md instanceof Openable){
+			changed = true;
 			((Openable)this.md).setOpen((Boolean)this.extra.pop());
 		}
 		if(this.md instanceof Stairs){
+			changed = true;
 			((Stairs)this.md).setInverted((Boolean)this.extra.pop());
 		}
 		
 		BlockState bs = b.getState();
-		bs.setData(this.md);
+		if(bs.getData().getData() != this.md.getData()){
+			changed = true;
+			bs.setData(this.md);
+		}
 		if(bs instanceof BrewingStand){
+			changed = true;
 			((BrewingStand)bs).setBrewingTime((Integer)this.extra.pop());
 		}
 		if(bs instanceof Jukebox){
+			changed = true;
 			((Jukebox)bs).setPlaying((Material)this.extra.pop());
 		}
 		if(bs instanceof NoteBlock){
+			changed = true;
 			((NoteBlock)bs).setNote((Note)this.extra.pop());
 		}
 		if(bs instanceof Furnace){
+			changed = true;
 			((Furnace)bs).setCookTime((Short)this.extra.pop());
 			((Furnace)bs).setBurnTime((Short)this.extra.pop());
 		}
 		if(bs instanceof InventoryHolder){
+			changed = true;
 			((InventoryHolder)bs).getInventory().setContents((ItemStack[])this.extra.pop());
 		}
 		if(bs instanceof Sign){
+			changed = true;
 			String lines[] = (String[]) this.extra.pop();
 			for(int i = 0; i < lines.length; i++){
 				((Sign)bs).setLine(i, lines[i]);
 			}
 		}
 
-		bs.update(true);
+		if(changed){
+			bs.update(true);
+		}
 	}
+	
 	public void updateData(BlockState bs){
 		this.md = bs.getData();
 		//get extra states
