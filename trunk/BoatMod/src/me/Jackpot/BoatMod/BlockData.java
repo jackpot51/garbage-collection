@@ -16,6 +16,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Directional;
 import org.bukkit.material.Ladder;
+import org.bukkit.material.Lever;
 import org.bukkit.material.MaterialData;
 import org.bukkit.material.Openable;
 import org.bukkit.material.Stairs;
@@ -110,12 +111,23 @@ public class BlockData{
 		}
 		return face;
 	}
-	@SuppressWarnings("deprecation")
+
 	public void setBlock(Block b, double dtheta){
-		b.setTypeId(this.md.getItemTypeId(), false);
+		/** TODO: Make this faster */
+		b.setType(this.md.getItemType());
 		//set rotation
 		if(this.md instanceof Ladder){
 			((Ladder)this.md).setFacingDirection(rotate(((Ladder)this.md).getAttachedFace(), dtheta));
+		}else if(this.md instanceof Lever){
+			Lever lever = (Lever)this.md;
+			switch(lever.getFacing()){
+			case DOWN:
+			case UP:
+				break;
+			default:
+				lever.setFacingDirection(rotate(lever.getFacing(), dtheta));
+			}
+			//Do nothing for lever
 		}else if(this.md instanceof Stairs){
 			((Stairs)this.md).setFacingDirection(rotate(((Stairs)this.md).getAscendingDirection(), dtheta));
 		}else if(this.md instanceof Directional){
@@ -129,9 +141,9 @@ public class BlockData{
 		if(this.md instanceof Stairs){
 			((Stairs)this.md).setInverted((Boolean)this.extra.pop());
 		}
-		b.setData(this.md.getData(), false);
 		
 		BlockState bs = b.getState();
+		bs.setData(this.md);
 		if(bs instanceof BrewingStand){
 			((BrewingStand)bs).setBrewingTime((Integer)this.extra.pop());
 		}

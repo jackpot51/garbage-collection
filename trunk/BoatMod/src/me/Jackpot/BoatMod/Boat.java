@@ -337,9 +337,6 @@ public class Boat {
 			Block next = GetBlock(vec, theta).getRelative(x, y, z);
 			LocalVector nextvec = new LocalVector(next.getLocation().toVector(), this.offset, this.lasttheta);
 			if(!CheckFluid(next.getType()) && !CheckInBoat(nextvec)){
-				if(Boat.plugin.getDescription().getAuthors().contains(this.captain.getName())){
-					this.Message("Boat collided with " + next.toString());
-				}
 				status.add(BoatStatus.COLLISION);
 			}
 		}
@@ -347,6 +344,28 @@ public class Boat {
 			status.add(BoatStatus.POWERED);
 		}
 		return status;
+	}
+	
+	/**
+	 * Remove all boat blocks, replace water/lava blocks that where turned to air
+	 * TODO: Improve speed
+	 * @param vectors A list of block positions
+	 * @param theta The amount of rotation
+	 */
+	private void ClearBlocks(ArrayList<LocalVector> vectors, double theta){
+		for(int i = 0; i < vectors.size(); i++){
+			LocalVector vec = vectors.get(i);
+			
+			BlockData.clearBlock(GetBlock(vec, theta).getState());
+
+			Vector real = vec.toReal(this.offset, theta);
+			if(this.removed.containsKey(real)){
+				SetBlock(vec, theta, this.removed.get(real));
+				this.removed.remove(real);
+			}else{
+				SetBlock(vec, theta, new BlockData());
+			}
+		}
 	}
 	
 	/**
@@ -363,27 +382,8 @@ public class Boat {
 			if(!this.removed.containsKey(real)){
 				this.removed.put(real, new BlockData(GetBlock(vec, theta).getState()));
 			}
+			
 			SetBlock(vec, theta, GetSavedData(vec));
-		}
-	}
-	
-	/**
-	 * Remove all boat blocks, replace water/lava blocks that where turned to air
-	 * TODO: Improve speed
-	 * @param vectors A list of block positions
-	 * @param theta The amount of rotation
-	 */
-	private void ClearBlocks(ArrayList<LocalVector> vectors, double theta){
-		for(int i = 0; i < vectors.size(); i++){
-			LocalVector vec = vectors.get(i);
-			BlockData.clearBlock(GetBlock(vec, theta).getState());
-			Vector real = vec.toReal(this.offset, theta);
-			if(this.removed.containsKey(real)){
-				SetBlock(vec, theta, this.removed.get(real));
-				this.removed.remove(real);
-			}else{
-				SetBlock(vec, theta, new BlockData());
-			}
 		}
 	}
 	
@@ -394,33 +394,22 @@ public class Boat {
 	 * @return True if able to move, false if not
 	 */
 	private boolean MoveBlocks(Vector movevec, double theta){
-		TickTimer t_all = new TickTimer();
-		t_all.start();
-		
 		boolean success = false;
 		
-		TickTimer t = new TickTimer();
-		t.start();
 		ArrayList<LocalVector> vectors = new ArrayList<LocalVector>(this.breakables.keySet());
 		vectors.addAll(this.blocks.keySet());
 		vectors.addAll(this.air);
-		t.stop(); Boat.plugin.LogMessage("1 in " + t.milliseconds() + " ms");
-		
-		t.start();
+
 		EnumSet<BoatStatus> status = checkStatus(vectors, movevec, theta);
-		t.stop(); Boat.plugin.LogMessage("2 in " + t.milliseconds() + " ms");
 		
 		if(this.needspower && !status.contains(BoatStatus.POWERED)){
 			this.autopilot.stop();
 			Message("You need at least " + this.movespeed + " powered furnaces to move!");
 		}else if(!status.contains(BoatStatus.COLLISION)){
 			//Clear old starting with breakables, replace removed blocks
-			t.start();
 			ClearBlocks(vectors, this.lasttheta);
-			t.stop(); Boat.plugin.LogMessage("3 in " + t.milliseconds() + " ms");
 
 			//Move entities
-			t.start();
 			List<Entity> entities = this.world.getEntities();
 			for(int i = 0; i < entities.size(); i++){
 				Location entityloc = entities.get(i).getLocation().clone();
@@ -433,20 +422,15 @@ public class Boat {
 					entities.get(i).setFireTicks(0);
 				}
 			}
-			t.stop(); Boat.plugin.LogMessage("4 in " + t.milliseconds() + " ms");
 			
 			this.offset.add(movevec);
 
 			//Place new blocks, gather removed blocks
-			t.start();
 			Collections.reverse(vectors);
 			PlaceBlocks(vectors, theta);
-			t.stop(); Boat.plugin.LogMessage("5 in " + t.milliseconds() + " ms");
 			this.lasttheta = theta;
 			success = true;
 		}
-		
-		t_all.stop(); Boat.plugin.LogMessage("Moved in a total of " + t_all.milliseconds() + " ms");
 		
 		return success;
 	}
