@@ -288,11 +288,6 @@ public class Boat {
 		}
 	}
 	
-	private void SetBlock(LocalVector vec, double theta, BlockData bd){
-		Vector real = vec.toReal(this.offset, theta);
-		bd.setBlock(this.world.getBlockAt(real.getBlockX(), real.getBlockY(), real.getBlockZ()), theta-this.lasttheta);
-	}
-	
 	private Block GetBlock(LocalVector vec, double theta){
 		Vector real = vec.toReal(this.offset, theta);
 		return this.world.getBlockAt(real.getBlockX(), real.getBlockY(), real.getBlockZ());
@@ -351,20 +346,23 @@ public class Boat {
 	 * @param vectors A list of block positions
 	 * @param theta The amount of rotation
 	 */
-	private void ClearBlocks(ArrayList<LocalVector> vectors, double theta){
+	private ArrayList<BoatChange> ClearBlocks(ArrayList<LocalVector> vectors, double theta){
+		ArrayList<BoatChange> changes = new ArrayList<BoatChange>();
 		for(int i = 0; i < vectors.size(); i++){
 			LocalVector vec = vectors.get(i);
 			
 			BlockData.clearBlock(GetBlock(vec, theta).getState());
 
+			BlockData bd = new BlockData();
 			Vector real = vec.toReal(this.offset, theta);
 			if(this.removed.containsKey(real)){
-				SetBlock(vec, theta, this.removed.get(real));
+				bd = this.removed.get(real);
 				this.removed.remove(real);
-			}else{
-				SetBlock(vec, theta, new BlockData());
 			}
+			
+			changes.add(new BoatChange(real, theta - this.lasttheta, bd));
 		}
+		return changes;
 	}
 	
 	/**
@@ -374,16 +372,19 @@ public class Boat {
 	 * @param vectors A list of block positions
 	 * @param theta The amount of rotation
 	 */
-	private void PlaceBlocks(ArrayList<LocalVector> vectors, double theta){
+	private ArrayList<BoatChange> PlaceBlocks(ArrayList<LocalVector> vectors, double theta){
+		ArrayList<BoatChange> changes = new ArrayList<BoatChange>();
 		for(int i = 0; i < vectors.size(); i++){
 			LocalVector vec = vectors.get(i);
 			Vector real = vec.toReal(this.offset, theta);
 			if(!this.removed.containsKey(real)){
 				this.removed.put(real, new BlockData(GetBlock(vec, theta).getState()));
 			}
-			
-			SetBlock(vec, theta, GetSavedData(vec));
+
+			BlockData bd = GetSavedData(vec);
+			changes.add(new BoatChange(real, theta - this.lasttheta, bd));
 		}
+		return changes;
 	}
 	
 	/**
@@ -406,7 +407,7 @@ public class Boat {
 			Message("You need at least " + this.movespeed + " powered furnaces to move!");
 		}else if(!status.contains(BoatStatus.COLLISION)){
 			//Clear old starting with breakables, replace removed blocks
-			ClearBlocks(vectors, this.lasttheta);
+			ArrayList<BoatChange> clear_changes = ClearBlocks(vectors, this.lasttheta);
 
 			//Move entities
 			List<Entity> entities = this.world.getEntities();
@@ -423,10 +424,19 @@ public class Boat {
 			}
 			
 			this.offset.add(movevec);
-
+			//Todo: Make it so this can go after PlaceBlocks
+			for(int i = 0; i < clear_changes.size(); i++){
+				clear_changes.get(i).apply(this.world);
+			}
+			
 			//Place new blocks, gather removed blocks
 			Collections.reverse(vectors);
-			PlaceBlocks(vectors, theta);
+			ArrayList<BoatChange> place_changes = PlaceBlocks(vectors, theta);
+			
+			for(int i = 0; i < place_changes.size(); i++){
+				place_changes.get(i).apply(this.world);
+			}
+			
 			this.lasttheta = theta;
 			success = true;
 		}
