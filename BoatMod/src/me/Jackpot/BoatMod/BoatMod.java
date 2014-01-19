@@ -30,7 +30,7 @@ public class BoatMod extends JavaPlugin {
 	private final BoatModPlayerListener playerListener = new BoatModPlayerListener(this);
 	
 	public void BroadcastMessage(String msg){
-		getServer().broadcastMessage("[" + getDescription().getName() + "] " + msg);
+		getServer().broadcastMessage(ChatColor.BLUE.toString() + "[" + getDescription().getName() + "]" + ChatColor.RESET.toString() + " " + msg);
 	}
 	
 	public void Message(CommandSender sender, String msg){
@@ -204,6 +204,7 @@ public class BoatMod extends JavaPlugin {
 		return true;
 	}
 	
+	//TODO: Add boat tp command
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
 		boolean success = false;
