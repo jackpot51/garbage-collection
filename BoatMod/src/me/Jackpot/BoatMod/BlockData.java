@@ -136,10 +136,6 @@ public class BlockData{
 	public void setBlock(Block b){
 		/** TODO: Make this faster */
 		boolean changed = false;
-		if(b.getType() != this.md.getItemType()){
-			changed = true;
-			b.setType(this.md.getItemType());
-		}
 		
 		//set extra states
 		if(this.md instanceof Openable){
@@ -150,12 +146,16 @@ public class BlockData{
 			changed = true;
 			((Stairs)this.md).setInverted((Boolean)this.extra.pop());
 		}
+		//4291 ms turn if together b.setTypeIdAndData(this.md.getItemTypeId(), this.md.getData(), false);
+		//3548 ms turn if NMS update NMSBlockSetter.setBlockFast(b, this.md.getItemTypeId(), this.md.getData());
+		
+		if(b.getType() != this.md.getItemType() || b.getData() != this.md.getData()){
+			changed = true;
+			//NMSBlockSetter.setBlockFast(b, this.md.getItemTypeId(), this.md.getData());
+			b.setTypeIdAndData(this.md.getItemTypeId(), this.md.getData(), false);
+		}
 		
 		BlockState bs = b.getState();
-		if(bs.getData().getData() != this.md.getData()){
-			changed = true;
-			bs.setData(this.md);
-		}
 		if(bs instanceof BrewingStand){
 			changed = true;
 			((BrewingStand)bs).setBrewingTime((Integer)this.extra.pop());
