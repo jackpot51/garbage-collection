@@ -6,10 +6,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -163,10 +163,9 @@ public class Boat {
 	public boolean Move(Vector direction){
 		Vector vec = GetCompassDirection(direction, 0.75);
 		if(vec.length() == 1){
-			for(int i = 0; i < this.movespeed; i++){ //it has to be done this way to keep water intact and properly collide
-				if(!MoveBlocks(vec, this.lasttheta)){
-					return false;
-				}
+			vec.multiply(this.movespeed);
+			if(!MoveBlocks(vec, this.lasttheta)){
+				return false;
 			}
 			return true;
 		}
@@ -405,6 +404,8 @@ public class Boat {
 	 */
 	private boolean MoveBlocks(Vector movevec, double theta){
 		boolean success = false;
+		TickTimer t = new TickTimer();
+		t.start();
 		
 		ArrayList<LocalVector> vectors = new ArrayList<LocalVector>(this.breakables.keySet());
 		vectors.addAll(this.blocks.keySet());
@@ -420,33 +421,49 @@ public class Boat {
 			//Clear old starting with breakables, replace removed blocks
 			ClearBlocks(changes, vectors, this.lasttheta);
 
-			//Move entities
-			List<Entity> entities = this.world.getEntities();
-			for(int i = 0; i < entities.size(); i++){
-				Location entityloc = entities.get(i).getLocation().clone();
-				Vector entityreal = entityloc.getBlock().getRelative(BlockFace.DOWN).getLocation().toVector();
-				LocalVector entitylocal = new LocalVector(entityreal, this.offset, this.lasttheta);
-				if(this.blocks.containsKey(entitylocal)){
-					Vector entitynext = entitylocal.toReal(this.offset, theta);
-					entities.get(i).teleport(entityloc.add(movevec).add(entitynext).subtract(entityreal));
-					entities.get(i).setFallDistance(0);
-					entities.get(i).setFireTicks(0);
-				}
-			}
-			
+			Vector old_offset = this.offset.clone();
 			this.offset.add(movevec);
 			
 			//Place new blocks, gather removed blocks
 			Collections.reverse(vectors);
 			PlaceBlocks(changes, vectors, theta);
 
+			ArrayList<Chunk> chunks = new ArrayList<Chunk>();
 			for(Map.Entry<Vector, BlockData> entry : changes.entrySet()){
-				entry.getValue().setBlock(this.world.getBlockAt(entry.getKey().getBlockX(), entry.getKey().getBlockY(), entry.getKey().getBlockZ()));
+				Block b = this.world.getBlockAt(entry.getKey().getBlockX(), entry.getKey().getBlockY(), entry.getKey().getBlockZ());
+				//TODO: Used changed return value
+				entry.getValue().setBlock(b);
+				Chunk chunk = b.getChunk();
+				if(!chunks.contains(chunk)){
+					chunks.add(chunk);
+				}
+			}
+
+			//Update chunks and move entities
+			for(int i = 0; i < chunks.size(); i++){
+				Chunk chunk = chunks.get(i);
+				Entity[] entities = chunk.getEntities();
+				for(int j = 0; j < entities.length; j++){
+					Entity entity = entities[j];
+					Location entityloc = entity.getLocation().clone();
+					Vector entityreal = entityloc.getBlock().getRelative(BlockFace.DOWN).getLocation().toVector();
+					LocalVector entitylocal = new LocalVector(entityreal, old_offset, this.lasttheta);
+					if(this.blocks.containsKey(entitylocal)){
+						Vector entitynext = entitylocal.toReal(old_offset, theta);
+						entity.teleport(entityloc.add(movevec).add(entitynext).subtract(entityreal));
+						entity.setFallDistance(0);
+						entity.setFireTicks(0);
+					}
+				}
+				//this.world.refreshChunk(chunk.getX(), chunk.getZ());
 			}
 			
 			this.lasttheta = theta;
 			success = true;
 		}
+		
+		t.stop();
+		//Message("Moved in " + t.milliseconds() + " ms");
 		
 		return success;
 	}
