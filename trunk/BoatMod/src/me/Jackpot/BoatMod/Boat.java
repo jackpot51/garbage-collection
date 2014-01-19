@@ -16,6 +16,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
 import org.bukkit.material.Attachable;
 import org.bukkit.material.MaterialData;
@@ -445,8 +446,12 @@ public class Boat {
 				Entity[] entities = chunk.getEntities();
 				for(int j = 0; j < entities.length; j++){
 					Entity entity = entities[j];
+					BlockFace check_face = BlockFace.DOWN;
+					if(entity instanceof Hanging){
+						check_face = ((Hanging)entity).getAttachedFace();
+					}
 					Location entityloc = entity.getLocation().clone();
-					Vector entityreal = entityloc.getBlock().getRelative(BlockFace.DOWN).getLocation().toVector();
+					Vector entityreal = entityloc.getBlock().getRelative(check_face).getLocation().toVector();
 					LocalVector entitylocal = new LocalVector(entityreal, old_offset, this.lasttheta);
 					if(this.blocks.containsKey(entitylocal)){
 						Vector entitynext = entitylocal.toReal(old_offset, theta);
