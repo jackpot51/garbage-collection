@@ -1,0 +1,1 @@
+This is a collection of various small projects that I have been and will be working on. Many will be OS independant but will start as projects that involve other things I am working on, such as SollerOS.
